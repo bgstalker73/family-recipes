@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keely & Brian's Family Recipes</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
   <style>
     body { font-family: 'Georgia', serif; background: #f9f5eb; }
     .hero { 
@@ -39,7 +38,7 @@
 
 <!-- RECIPES PAGE -->
 <div id="recipesPage" class="max-w-6xl mx-auto px-6 py-8 hidden">
-  <h2 class="text-4xl font-serif mb-6">Family Favorites</h2>
+  <h2 class="text-4xl font-serif mb-8">Family Favorites</h2>
   <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 </div>
 
@@ -62,8 +61,8 @@
       <option value="Beverages">Beverages</option>
       <option value="Specialty Items">Specialty Items</option>
     </select>
-    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-32 p-4 border rounded-2xl mb-4"></textarea>
-    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-32 p-4 border rounded-2xl mb-4"></textarea>
+    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
+    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
 
     <button onclick="addNewRecipe()" class="w-full bg-amber-900 hover:bg-amber-800 text-white py-6 text-xl rounded-3xl font-bold">
       ADD RECIPE TO COOKBOOK
@@ -117,7 +116,7 @@ function addNewRecipe() {
   recipes.unshift(newRecipe);
   localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
 
-  alert(`✅ "${title}" has been added!`);
+  alert(`✅ "${title}" has been added to your cookbook!`);
 
   // Clear form
   document.getElementById('newTitle').value = '';
@@ -130,6 +129,10 @@ function addNewRecipe() {
 
 function renderRecipes() {
   const container = document.getElementById('recipeGrid');
+  if (recipes.length === 0) {
+    container.innerHTML = '<p class="text-center text-xl text-gray-500 py-12">No recipes yet. Add some using the + Add Recipe button!</p>';
+    return;
+  }
   container.innerHTML = recipes.map(r => `
     <div class="bg-white p-6 rounded-3xl shadow">
       <h3 class="text-2xl font-serif">${r.title}</h3>
