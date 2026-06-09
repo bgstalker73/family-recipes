@@ -63,13 +63,13 @@
   <div id="addForm" class="max-w-2xl mx-auto px-6 pt-8 hidden">
     <h2 class="text-4xl font-serif mb-8">Add a New Family Recipe</h2>
     <div class="bg-white p-8 rounded-3xl shadow">
-      <input id="newTitle" placeholder="Recipe Title" class="w-full mb-4 p-4 border rounded-2xl text-xl">
+      <input id="newTitle" placeholder="Recipe Title *" class="w-full mb-4 p-4 border rounded-2xl text-xl">
       <input id="newCategory" placeholder="Category (e.g. Breakfast, Main Dishes)" class="w-full mb-4 p-4 border rounded-2xl">
-      <input id="newTags" placeholder="Tags (comma separated, e.g. spicy, quick, holiday)" class="w-full mb-4 p-4 border rounded-2xl">
+      <input id="newTags" placeholder="Tags (comma separated)" class="w-full mb-4 p-4 border rounded-2xl">
       <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
       <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
       <input id="newImages" placeholder="Image URLs (comma separated) - optional" class="w-full p-4 border rounded-2xl mb-6">
-      <button onclick="addNewRecipe()" class="w-full bg-amber-900 text-white py-5 text-xl rounded-3xl">Add Recipe to Cookbook</button>
+      <button onclick="addNewRecipe()" class="w-full bg-amber-900 hover:bg-amber-800 text-white py-5 text-xl rounded-3xl">Add Recipe to Cookbook</button>
     </div>
   </div>
 
@@ -80,12 +80,11 @@
         <button onclick="closeModal()" class="float-right text-4xl leading-none hover:text-amber-700">×</button>
         <h2 id="modalTitle" class="text-4xl font-serif mb-6 pr-12"></h2>
         
-        <!-- Image Carousel -->
         <div id="carousel" class="relative h-80 bg-gray-100 rounded-2xl mb-8 overflow-hidden"></div>
 
         <div class="grid md:grid-cols-2 gap-10">
           <div>
-            <h3 class="text-2xl mb-4 flex items-center gap-2"><i class="fas fa-carrot"></i> Ingredients</h3>
+            <h3 class="text-2xl mb-4">Ingredients</h3>
             <div id="ingredientsList" class="space-y-3"></div>
             <button onclick="printShoppingList()" class="mt-6 w-full bg-amber-800 hover:bg-amber-700 text-white py-4 rounded-2xl">🛒 Print Shopping List</button>
           </div>
@@ -95,10 +94,9 @@
           </div>
         </div>
 
-        <!-- Family Notes -->
         <div class="mt-12">
           <h3 class="text-2xl mb-3">Family Notes & Memories</h3>
-          <textarea id="notesArea" class="w-full h-32 p-5 border-2 border-amber-200 rounded-2xl" placeholder="Add tips, who loves this, variations..."></textarea>
+          <textarea id="notesArea" class="w-full h-32 p-5 border-2 border-amber-200 rounded-2xl"></textarea>
           <button onclick="saveNotes()" class="mt-3 bg-amber-700 text-white px-8 py-3 rounded-xl">Save Notes</button>
         </div>
 
@@ -108,7 +106,7 @@
   </div>
 
 <script>
-// ==================== RECIPES DATA ====================
+// ==================== DATA ====================
 let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [
   {
     id: 1,
@@ -130,9 +128,51 @@ let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [
   }
 ];
 
-// Save recipes to browser storage
+// Save to browser
 function saveRecipes() {
   localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
+}
+
+// ==================== ADD RECIPE ====================
+function showAddForm() {
+  document.getElementById('addForm').classList.remove('hidden');
+  document.getElementById('allRecipes').classList.add('hidden');
+  document.getElementById('home').style.display = 'none';
+}
+
+function addNewRecipe() {
+  const title = document.getElementById('newTitle').value.trim();
+  if (!title) {
+    alert("Please enter a recipe title!");
+    return;
+  }
+
+  const newRecipe = {
+    id: Date.now(),
+    title: title,
+    category: document.getElementById('newCategory').value.trim() || "Uncategorized",
+    tags: document.getElementById('newTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
+    images: document.getElementById('newImages').value.trim() ? 
+            document.getElementById('newImages').value.split(',').map(u => u.trim()) : 
+            ["https://picsum.photos/id/201/800/600"],
+    ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
+    instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean)
+  };
+
+  recipes.unshift(newRecipe);
+  saveRecipes();
+
+  alert(`✅ "${title}" added successfully!`);
+
+  // Clear form
+  document.getElementById('newTitle').value = '';
+  document.getElementById('newCategory').value = '';
+  document.getElementById('newTags').value = '';
+  document.getElementById('newIngredients').value = '';
+  document.getElementById('newInstructions').value = '';
+  document.getElementById('newImages').value = '';
+
+  showAllRecipes();
 }
 
 // ==================== RENDER FUNCTIONS ====================
@@ -162,17 +202,16 @@ function renderRecipeGrid(filteredRecipes) {
   `).join('');
 }
 
-// ==================== MODAL & CAROUSEL ====================
+// ==================== MODAL ====================
 let currentRecipe = null;
 let currentImageIndex = 0;
 
 function openRecipe(id) {
   currentRecipe = recipes.find(r => r.id === id);
   document.getElementById('modalTitle').textContent = currentRecipe.title;
-  
   renderCarousel();
-  
-  // Ingredients with checkboxes
+
+  // Ingredients
   let ingHTML = currentRecipe.ingredients.map((ing, i) => `
     <label class="flex items-center gap-3 cursor-pointer text-lg">
       <input type="checkbox" id="ing-${i}" class="w-5 h-5 accent-amber-800">
@@ -186,9 +225,7 @@ function openRecipe(id) {
     <div class="flex gap-4"><span class="font-bold text-amber-800">${i+1}.</span><span>${step}</span></div>
   `).join('');
 
-  // Load saved notes
   document.getElementById('notesArea').value = localStorage.getItem(`notes-${currentRecipe.id}`) || '';
-
   document.getElementById('recipeModal').classList.remove('hidden');
 }
 
@@ -197,8 +234,8 @@ function renderCarousel() {
   const container = document.getElementById('carousel');
   container.innerHTML = `
     <img id="carouselImg" src="${currentRecipe.images[0]}" class="w-full h-full object-cover">
-    <button onclick="prevImage()" class="absolute left-4 top-1/2 bg-black/50 text-white w-10 h-10 rounded-full">←</button>
-    <button onclick="nextImage()" class="absolute right-4 top-1/2 bg-black/50 text-white w-10 h-10 rounded-full">→</button>
+    <button onclick="prevImage()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white w-10 h-10 rounded-full">←</button>
+    <button onclick="nextImage()" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white w-10 h-10 rounded-full">→</button>
   `;
 }
 
@@ -206,12 +243,13 @@ function nextImage() {
   currentImageIndex = (currentImageIndex + 1) % currentRecipe.images.length;
   document.getElementById('carouselImg').src = currentRecipe.images[currentImageIndex];
 }
+
 function prevImage() {
   currentImageIndex = (currentImageIndex - 1 + currentRecipe.images.length) % currentRecipe.images.length;
   document.getElementById('carouselImg').src = currentRecipe.images[currentImageIndex];
 }
 
-// ==================== PRINT & NOTES ====================
+// Print & Notes
 function printRecipe() { window.print(); }
 
 function printShoppingList() {
@@ -230,44 +268,7 @@ function saveNotes() {
   alert("Notes saved! 👍");
 }
 
-// ==================== ADD RECIPE ====================
-function showAddForm() {
-  document.getElementById('addForm').classList.remove('hidden');
-  document.getElementById('allRecipes').classList.add('hidden');
-}
-
-function addNewRecipe() {
-  const title = document.getElementById('newTitle').value.trim();
-  if (!title) return alert("Please enter a recipe title.");
-
-  const newRecipe = {
-    id: Date.now(),
-    title: title,
-    category: document.getElementById('newCategory').value.trim() || "Uncategorized",
-    tags: document.getElementById('newTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
-    images: document.getElementById('newImages').value ? 
-            document.getElementById('newImages').value.split(',').map(u => u.trim()) : 
-            ["https://picsum.photos/id/201/800/600"],
-    ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
-    instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean)
-  };
-
-  recipes.unshift(newRecipe);
-  saveRecipes();
-  alert("✅ Recipe added successfully!");
-  
-  // Clear form
-  document.getElementById('newTitle').value = '';
-  document.getElementById('newCategory').value = '';
-  document.getElementById('newTags').value = '';
-  document.getElementById('newIngredients').value = '';
-  document.getElementById('newInstructions').value = '';
-  document.getElementById('newImages').value = '';
-
-  showAllRecipes();
-}
-
-// ==================== SEARCH & FILTER ====================
+// Search & Filter
 function filterRecipes() {
   const term = document.getElementById('searchInput').value.toLowerCase();
   const filtered = recipes.filter(r => 
@@ -285,12 +286,13 @@ function filterByCategory(cat) {
 }
 
 function showHome() {
-  document.getElementById('home').scrollIntoView({ behavior: "smooth" });
+  document.getElementById('home').style.display = 'flex';
   document.getElementById('allRecipes').classList.add('hidden');
   document.getElementById('addForm').classList.add('hidden');
 }
 
 function showAllRecipes() {
+  document.getElementById('home').style.display = 'none';
   document.getElementById('allRecipes').classList.remove('hidden');
   document.getElementById('addForm').classList.add('hidden');
   renderRecipeGrid(recipes);
@@ -300,25 +302,18 @@ function closeModal() {
   document.getElementById('recipeModal').classList.add('hidden');
 }
 
-// ==================== SLIDESHOW ====================
+// Slideshow
 function startSlideshow() {
-  const images = [
-    "https://picsum.photos/id/1080/2000/1200",
-    "https://picsum.photos/id/201/2000/1200",
-    "https://picsum.photos/id/292/2000/1200",
-    "https://picsum.photos/id/431/2000/1200"
-  ];
+  const images = ["https://picsum.photos/id/1080/2000/1200", "https://picsum.photos/id/201/2000/1200", "https://picsum.photos/id/292/2000/1200", "https://picsum.photos/id/431/2000/1200"];
   let i = 0;
-  const slideContainer = document.getElementById('slideshow');
-  
+  const slide = document.getElementById('slideshow');
   setInterval(() => {
     i = (i + 1) % images.length;
-    slideContainer.style.background = `url('${images[i]}') center/cover no-repeat`;
-    slideContainer.style.height = '24rem';
+    slide.style.background = `url('${images[i]}') center/cover no-repeat`;
   }, 5000);
 }
 
-// ==================== INITIALIZE ====================
+// Initialize
 renderCategories();
 renderRecipeGrid(recipes);
 startSlideshow();
