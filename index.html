@@ -15,7 +15,8 @@
       min-height: 100vh;
     }
     .drop-zone { border: 3px dashed #d97706; }
-    .heart { cursor: pointer; font-size: 1.3em; }
+    .heart { cursor: pointer; font-size: 1.8rem; transition: all 0.2s; }
+    .heart:hover { transform: scale(1.2); }
   </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -26,6 +27,7 @@
     <div class="flex gap-8 text-lg">
       <button onclick="showHome()" class="hover:text-amber-300">Home</button>
       <button onclick="showRecipesPage()" class="hover:text-amber-300">Recipes</button>
+      <button onclick="showFavoritesPage()" class="hover:text-amber-300">Family Favorites ❤️</button>
       <button onclick="showAddForm()" class="hover:text-amber-300 font-medium">+ Add Recipe</button>
     </div>
   </div>
@@ -36,27 +38,38 @@
   <div class="max-w-4xl px-6">
     <h1 class="text-6xl md:text-8xl font-serif italic tracking-wider mb-6">Keely & Brian's<br>Family Recipes</h1>
     <p class="text-3xl mb-12">Love. Tradition. Flavor.</p>
-    <button onclick="showRecipesPage()" class="bg-amber-700 hover:bg-amber-600 text-xl px-12 py-5 rounded-full">Family Favorites ❤️</button>
+    <button onclick="showFavoritesPage()" class="bg-amber-700 hover:bg-amber-600 text-xl px-12 py-5 rounded-full">Family Favorites ❤️</button>
   </div>
 </div>
 
-<!-- RECIPES PAGE (Search + Categories) -->
-<div id="recipesPage" class="max-w-6xl mx-auto px-6 py-8 hidden">
-  <input id="searchInput" type="text" placeholder="Search recipes or ingredients..." 
-         class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-amber-900 mb-8" onkeyup="filterRecipes()">
-
-  <h2 class="text-4xl font-serif mb-6">Categories</h2>
-  <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10"></div>
-
-  <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+<!-- FAMILY FAVORITES PAGE -->
+<div id="favoritesPage" class="max-w-6xl mx-auto px-6 py-8 hidden">
+  <h2 class="text-4xl font-serif mb-6">Most Recent Family Favorites ❤️</h2>
+  <div id="favoritesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 </div>
 
-<!-- ADD RECIPE (No category buttons here) -->
+<!-- RECIPES PAGE (with category buttons) -->
+<div id="recipesPage" class="max-w-6xl mx-auto px-6 py-8 hidden">
+  <input id="searchInput" type="text" placeholder="Search recipes..." 
+         class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-amber-900 mb-8" onkeyup="filterRecipes()">
+  
+  <h2 class="text-4xl font-serif mb-6">Categories</h2>
+  <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+
+  <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10"></div>
+</div>
+
+<!-- ADD RECIPE PAGE -->
 <div id="addForm" class="max-w-2xl mx-auto px-6 py-8 hidden">
   <h2 class="text-4xl font-serif mb-8">Add a New Family Recipe</h2>
   <div class="bg-white p-8 rounded-3xl shadow">
-    <input id="newTitle" placeholder="Recipe Title *" class="w-full mb-4 p-4 border rounded-2xl text-xl">
+    <!-- Title with Heart -->
+    <div class="flex items-center gap-3 mb-4">
+      <button onclick="toggleFavoriteInAdd()" id="addHeart" class="heart text-red-500">♡</button>
+      <input id="newTitle" placeholder="Recipe Title *" class="flex-1 p-4 border rounded-2xl text-xl">
+    </div>
 
+    <!-- Camera Section -->
     <div class="mb-8 p-6 border-2 border-dashed border-amber-700 rounded-3xl">
       <label class="block text-lg mb-4 font-medium">📸 Scan Old Printed Recipe</label>
       <div class="grid grid-cols-2 gap-4">
@@ -86,9 +99,6 @@
       <option value="Main Dishes">Main Dishes</option>
       <option value="Desserts">Desserts</option>
       <option value="Beverages">Beverages</option>
-      <option value="Condiments">Condiments</option>
-      <option value="Seasonings">Seasonings</option>
-      <option value="Sauces">Sauces</option>
       <option value="Specialty Items">Specialty Items</option>
     </select>
 
@@ -106,30 +116,100 @@
 let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
 let newRecipeImages = [];
 let tesseractWorker = null;
+let isFavoriteInAdd = false;
+
+function saveRecipes() {
+  localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
+}
 
 // Navigation
 function showHome() { hideAll(); document.getElementById('home').style.display = 'flex'; }
 function showRecipesPage() { hideAll(); document.getElementById('recipesPage').classList.remove('hidden'); renderRecipeGrid(recipes); }
+function showFavoritesPage() { hideAll(); document.getElementById('favoritesPage').classList.remove('hidden'); renderFavorites(); }
 function showAddForm() { 
   hideAll(); 
   newRecipeImages = []; 
+  isFavoriteInAdd = false;
+  document.getElementById('addHeart').innerHTML = '♡';
   document.getElementById('previewImages').innerHTML = '';
   document.getElementById('addForm').classList.remove('hidden'); 
 }
 function hideAll() {
   document.getElementById('home').style.display = 'none';
   document.getElementById('recipesPage').classList.add('hidden');
+  document.getElementById('favoritesPage').classList.add('hidden');
   document.getElementById('addForm').classList.add('hidden');
 }
 
-// Camera, Upload, OCR, Add Recipe (kept from working version)
-function openCamera() { /* working code */ }
-function setupImageUpload() { /* working code */ }
-function handleFiles(files) { /* working code */ }
-function renderPreviewImages() { /* working code */ }
-function removePreviewImage(i) { /* working code */ }
-async function runOCR() { /* working code */ }
+// Heart toggle
+function toggleFavoriteInAdd() {
+  isFavoriteInAdd = !isFavoriteInAdd;
+  document.getElementById('addHeart').innerHTML = isFavoriteInAdd ? '❤️' : '♡';
+}
 
+// Camera & Upload (Fixed)
+function openCamera() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = e => handleFiles(e.target.files);
+  input.click();
+}
+
+function setupImageUpload() {
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('imageUpload');
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+}
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      newRecipeImages.push(e.target.result);
+      renderPreviewImages();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviewImages() {
+  document.getElementById('previewImages').innerHTML = newRecipeImages.map((src, i) => `
+    <div class="relative inline-block">
+      <img src="${src}" class="w-24 h-24 object-cover rounded-xl">
+      <button onclick="removePreviewImage(${i})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs">×</button>
+    </div>
+  `).join('');
+}
+
+function removePreviewImage(i) {
+  newRecipeImages.splice(i, 1);
+  renderPreviewImages();
+}
+
+// OCR
+async function runOCR() {
+  if (newRecipeImages.length === 0) return alert("Please take or upload a photo first");
+  const status = document.getElementById('ocrStatus');
+  status.textContent = "Scanning...";
+
+  if (!tesseractWorker) tesseractWorker = await Tesseract.createWorker('eng');
+
+  let fullText = "";
+  for (let img of newRecipeImages) {
+    const result = await Tesseract.recognize(img, 'eng');
+    fullText += result.data.text + "\n";
+  }
+
+  const lines = fullText.split('\n').map(l => l.trim()).filter(l => l);
+  document.getElementById('newIngredients').value = lines.slice(0, 12).join('\n');
+  document.getElementById('newInstructions').value = lines.slice(12).join('\n');
+  status.textContent = "✅ Text extracted!";
+}
+
+// Add Recipe
 function addNewRecipe() {
   const title = document.getElementById('newTitle').value.trim();
   if (!title) return alert("Please enter a recipe title!");
@@ -140,20 +220,21 @@ function addNewRecipe() {
     category: document.getElementById('newCategory').value || "Uncategorized",
     ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
     instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
-    images: newRecipeImages.length ? newRecipeImages : ["https://picsum.photos/id/201/800/600"]
+    images: newRecipeImages.length ? newRecipeImages : ["https://picsum.photos/id/201/800/600"],
+    favorite: isFavoriteInAdd
   };
 
   recipes.unshift(newRecipe);
   localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
 
-  alert(`✅ "${title}" added successfully!`);
+  alert(`✅ "${title}" has been added!`);
   showRecipesPage();
 }
 
 // Render
 function renderCategories() {
-  const cats = ["Breakfast", "Appetizers", "Salads", "Soups", "Pasta", "Side Dishes", "Bread", "Main Dishes", 
-                "Desserts", "Beverages", "Condiments", "Seasonings", "Sauces", "Specialty Items"];
+  const cats = ["Breakfast", "Appetizers", "Salads", "Soups", "Pasta", "Side Dishes", "Bread", 
+                "Main Dishes", "Desserts", "Beverages", "Specialty Items"];
   document.getElementById('categories').innerHTML = cats.map(cat => `
     <div onclick="filterByCategory('${cat}')" class="bg-white p-4 rounded-3xl text-center cursor-pointer hover:bg-amber-50 border border-amber-900">
       <h3 class="text-xl">${cat}</h3>
@@ -163,11 +244,22 @@ function renderCategories() {
 
 function renderRecipeGrid(list) {
   document.getElementById('recipeGrid').innerHTML = list.map(r => `
-    <div class="recipe-card bg-white p-6 rounded-3xl shadow cursor-pointer">
+    <div class="bg-white p-6 rounded-3xl shadow cursor-pointer">
       <h3 class="text-2xl">${r.title}</h3>
       <p class="text-amber-800">${r.category}</p>
     </div>
   `).join('');
+}
+
+function renderFavorites() {
+  const favorites = recipes.filter(r => r.favorite).sort((a,b) => b.id - a.id);
+  const container = document.getElementById('favoritesGrid');
+  container.innerHTML = favorites.length ? favorites.map(r => `
+    <div class="bg-white p-6 rounded-3xl shadow">
+      <h3 class="text-2xl">${r.title}</h3>
+      <p class="text-amber-800">${r.category}</p>
+    </div>
+  `).join('') : '<p class="text-center text-xl py-12 text-gray-500">No favorites yet. ❤️ a recipe when adding it!</p>';
 }
 
 function filterByCategory(cat) {
