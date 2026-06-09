@@ -5,154 +5,94 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keely & Brian's Family Recipes</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
   <style>
     body { font-family: 'Georgia', serif; background: #f9f5eb; }
-    .hero { 
-      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
-                  url('PXL_20251206_224748469.jpg') center/cover no-repeat fixed;
-      min-height: 100vh;
-    }
-    .category-card { transition: all 0.3s; }
-    .category-card:hover { transform: scale(1.05); }
-    .recipe-card { transition: all 0.3s; }
-    .recipe-card:hover { transform: scale(1.04); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15); }
+    .hero { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('PXL_20251206_224748469.jpg') center/cover; min-height: 100vh; }
   </style>
 </head>
-<body class="min-h-screen pb-20">
+<body>
 
-<nav class="bg-amber-900 text-white py-5 sticky top-0 z-50 shadow-md">
-  <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+<nav class="bg-amber-900 text-white py-4">
+  <div class="max-w-6xl mx-auto px-6 flex justify-between">
     <h1 class="text-3xl font-bold italic">Keely & Brian's</h1>
-    <div class="flex gap-8 text-lg">
-      <a href="#" onclick="showHome()" class="hover:text-amber-300">Home</a>
-      <a href="#" onclick="showAllRecipes()" class="hover:text-amber-300">Recipes</a>
-      <a href="#" onclick="showAddForm()" class="hover:text-amber-300 font-medium">+ Add Recipe</a>
+    <div class="space-x-6">
+      <button onclick="showHome()" class="hover:underline">Home</button>
+      <button onclick="showAllRecipes()" class="hover:underline">Recipes</button>
+      <button onclick="showAddForm()" class="hover:underline font-bold">+ Add Recipe</button>
     </div>
   </div>
 </nav>
 
 <!-- HOME -->
 <div id="home" class="hero flex items-center justify-center text-center text-white">
-  <div class="max-w-4xl px-6">
-    <h1 class="text-6xl md:text-8xl font-serif italic tracking-wider mb-6">Keely & Brian's<br>Family Recipes</h1>
-    <p class="text-3xl mb-12">Love. Tradition. Flavor.</p>
-    <button onclick="showAllRecipes()" class="bg-amber-700 hover:bg-amber-600 text-xl px-12 py-5 rounded-full">Browse Recipes →</button>
+  <div>
+    <h1 class="text-6xl font-serif italic">Keely & Brian's Family Recipes</h1>
+    <button onclick="showAllRecipes()" class="mt-8 bg-amber-700 px-10 py-4 rounded-full text-xl">Browse Recipes</button>
   </div>
 </div>
 
-<!-- Categories - Smaller -->
-<div class="max-w-6xl mx-auto px-6 py-8">
-  <h2 class="text-4xl font-serif mb-6">Categories</h2>
-  <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+<!-- Add Form -->
+<div id="addForm" class="max-w-xl mx-auto p-8 hidden">
+  <h2 class="text-3xl mb-6">Add New Recipe</h2>
+  <input id="title" placeholder="Recipe Title" class="w-full p-4 border mb-4 rounded-xl">
+  <button onclick="addRecipe()" class="w-full bg-green-700 text-white py-6 rounded-2xl text-xl font-bold">
+    ADD RECIPE
+  </button>
 </div>
 
-<!-- All Recipes -->
-<div id="allRecipes" class="max-w-6xl mx-auto px-6 py-8 hidden">
-  <h2 class="text-4xl font-serif mb-8">Our Family Favorites</h2>
-  <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-</div>
-
-<!-- Add Recipe Form -->
-<div id="addForm" class="max-w-2xl mx-auto px-6 py-8 hidden">
-  <h2 class="text-4xl font-serif mb-8">Add a New Family Recipe</h2>
-  <div class="bg-white p-8 rounded-3xl shadow">
-    <input id="newTitle" placeholder="Recipe Title *" class="w-full mb-4 p-4 border rounded-2xl text-xl">
-    <input id="newCategory" placeholder="Category" class="w-full mb-4 p-4 border rounded-2xl">
-    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-32 p-4 border rounded-2xl mb-4"></textarea>
-    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-32 p-4 border rounded-2xl mb-4"></textarea>
-    
-    <button onclick="addNewRecipe()" 
-            class="w-full bg-amber-900 hover:bg-amber-800 text-white py-6 text-xl rounded-3xl font-bold">
-      ADD RECIPE TO COOKBOOK
-    </button>
-  </div>
+<!-- Recipes List -->
+<div id="allRecipes" class="max-w-6xl mx-auto p-8 hidden">
+  <h2 class="text-3xl mb-6">All Recipes</h2>
+  <div id="recipeList"></div>
 </div>
 
 <script>
-// ==================== DATA ====================
-let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
+let recipes = JSON.parse(localStorage.getItem('recipes')) || [];
 
-// ==================== NAVIGATION ====================
 function showHome() {
-  hideAll();
   document.getElementById('home').style.display = 'flex';
-}
-
-function showAllRecipes() {
-  hideAll();
-  document.getElementById('allRecipes').classList.remove('hidden');
-  renderRecipeGrid(recipes);
+  document.getElementById('addForm').classList.add('hidden');
+  document.getElementById('allRecipes').classList.add('hidden');
 }
 
 function showAddForm() {
-  hideAll();
-  document.getElementById('addForm').classList.remove('hidden');
-}
-
-function hideAll() {
   document.getElementById('home').style.display = 'none';
+  document.getElementById('addForm').classList.remove('hidden');
   document.getElementById('allRecipes').classList.add('hidden');
+}
+
+function showAllRecipes() {
+  document.getElementById('home').style.display = 'none';
   document.getElementById('addForm').classList.add('hidden');
+  document.getElementById('allRecipes').classList.remove('hidden');
+  renderRecipes();
 }
 
-// ==================== ADD RECIPE ====================
-function addNewRecipe() {
-  const title = document.getElementById('newTitle').value.trim();
-  if (!title) return alert("Please enter a recipe title!");
+function addRecipe() {
+  const title = document.getElementById('title').value.trim();
+  if (!title) {
+    alert("Please enter a title");
+    return;
+  }
 
-  const newRecipe = {
-    id: Date.now(),
-    title: title,
-    category: document.getElementById('newCategory').value.trim() || "Uncategorized",
-    ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
-    instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
-    images: ["https://picsum.photos/id/201/800/600"]
-  };
-
-  recipes.unshift(newRecipe);
-  localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
-
-  alert(`✅ "${title}" has been added!`);
-  document.getElementById('newTitle').value = '';
-  document.getElementById('newCategory').value = '';
-  document.getElementById('newIngredients').value = '';
-  document.getElementById('newInstructions').value = '';
-
-  showAllRecipes();
-}
-
-// ==================== RENDER ====================
-function renderCategories() {
-  const cats = ["Breakfast", "Appetizers", "Salads", "Soups", "Pasta", "Side Dishes", "Bread", 
-                "Main Dishes", "Desserts", "Beverages", "Condiments", "Seasonings", "Sauces", "Specialty Items"];
+  recipes.unshift({ id: Date.now(), title: title });
+  localStorage.setItem('recipes', JSON.stringify(recipes));
   
-  document.getElementById('categories').innerHTML = cats.map(cat => `
-    <div onclick="filterByCategory('${cat}')" class="category-card bg-white p-4 rounded-3xl text-center cursor-pointer hover:bg-amber-50 border border-amber-900">
-      <h3 class="text-xl font-serif">${cat}</h3>
-    </div>
-  `).join('');
-}
-
-function renderRecipeGrid(list) {
-  document.getElementById('recipeGrid').innerHTML = list.map(r => `
-    <div onclick="alert('Recipe: ${r.title}\\nCategory: ${r.category}')" 
-         class="recipe-card bg-white p-6 rounded-3xl shadow cursor-pointer">
-      <h3 class="text-2xl font-serif">${r.title}</h3>
-      <p class="text-amber-800 mt-2">${r.category}</p>
-    </div>
-  `).join('');
-}
-
-function filterByCategory(cat) {
-  const filtered = recipes.filter(r => r.category === cat);
+  alert(`Added: ${title}`);
+  document.getElementById('title').value = '';
   showAllRecipes();
-  renderRecipeGrid(filtered);
 }
 
-// Initialize
-renderCategories();
-renderRecipeGrid(recipes);
+function renderRecipes() {
+  const list = document.getElementById('recipeList');
+  list.innerHTML = recipes.map(r => `
+    <div class="bg-white p-6 mb-4 rounded-2xl shadow">
+      <h3 class="text-2xl">${r.title}</h3>
+    </div>
+  `).join('');
+}
+
+// Start on home
 showHome();
 </script>
 </body>
