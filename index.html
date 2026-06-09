@@ -57,7 +57,7 @@
   <div class="bg-white p-8 rounded-3xl shadow">
     <input id="newTitle" placeholder="Recipe Title *" class="w-full mb-4 p-4 border rounded-2xl text-xl">
 
-    <!-- Camera / Upload -->
+    <!-- Camera + Upload -->
     <div class="mb-8 p-6 border-2 border-dashed border-amber-700 rounded-3xl">
       <label class="block text-lg mb-3">📸 Take Photo of Recipe Card (Optional)</label>
       <div class="grid grid-cols-2 gap-4">
@@ -75,7 +75,6 @@
       <p id="ocrStatus" class="text-center text-sm mt-2 text-gray-600"></p>
     </div>
 
-    <!-- Category Dropdown -->
     <select id="newCategory" class="w-full mb-4 p-4 border rounded-2xl text-lg">
       <option value="">Select Category</option>
       <option value="Breakfast">Breakfast</option>
@@ -125,22 +124,71 @@ function hideAll() {
 }
 
 // Camera & Upload
-function openCamera() { /* same as before */ }
-function setupImageUpload() { /* same */ }
-function handleFiles(files) { /* same */ }
-function renderPreviewImages() { /* same */ }
-function removePreviewImage(i) { /* same */ }
+function openCamera() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = e => handleFiles(e.target.files);
+  input.click();
+}
+
+function setupImageUpload() {
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('imageUpload');
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+}
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      newRecipeImages.push(e.target.result);
+      renderPreviewImages();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviewImages() {
+  document.getElementById('previewImages').innerHTML = newRecipeImages.map((src, i) => `
+    <div class="relative inline-block">
+      <img src="${src}" class="w-24 h-24 object-cover rounded-xl">
+      <button onclick="removePreviewImage(${i})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs">×</button>
+    </div>
+  `).join('');
+}
+
+function removePreviewImage(i) {
+  newRecipeImages.splice(i, 1);
+  renderPreviewImages();
+}
 
 // OCR
-async function runOCR() { /* same as before */ }
+async function runOCR() {
+  if (newRecipeImages.length === 0) return alert("Please take or upload a photo first");
+  const status = document.getElementById('ocrStatus');
+  status.textContent = "Scanning...";
 
-// FIXED ADD RECIPE
+  if (!tesseractWorker) tesseractWorker = await Tesseract.createWorker('eng');
+
+  let fullText = "";
+  for (let img of newRecipeImages) {
+    const result = await Tesseract.recognize(img, 'eng');
+    fullText += result.data.text + "\n";
+  }
+
+  const lines = fullText.split('\n').map(l => l.trim()).filter(l => l);
+  document.getElementById('newIngredients').value = lines.slice(0, 12).join('\n');
+  document.getElementById('newInstructions').value = lines.slice(12).join('\n');
+  status.textContent = "✅ Text extracted! Edit if needed.";
+}
+
+// Add Recipe
 function addNewRecipe() {
   const title = document.getElementById('newTitle').value.trim();
-  if (!title) {
-    alert("Please enter a recipe title!");
-    return;
-  }
+  if (!title) return alert("Please enter a recipe title!");
 
   const newRecipe = {
     id: Date.now(),
@@ -154,7 +202,7 @@ function addNewRecipe() {
   recipes.unshift(newRecipe);
   localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
 
-  alert(`✅ "${title}" has been successfully added to the cookbook!`);
+  alert(`✅ "${title}" has been added!`);
 
   // Clear form
   document.getElementById('newTitle').value = '';
@@ -168,9 +216,30 @@ function addNewRecipe() {
 }
 
 // Render
-function renderCategories() { /* your list */ }
-function renderRecipeGrid(list) { /* simple display */ }
-function filterByCategory(cat) { /* filter */ }
+function renderCategories() {
+  const cats = ["Breakfast", "Appetizers", "Salads", "Soups", "Pasta", "Side Dishes", "Bread", 
+                "Main Dishes", "Desserts", "Beverages", "Condiments", "Seasonings", "Sauces", "Specialty Items"];
+  document.getElementById('categories').innerHTML = cats.map(cat => `
+    <div onclick="filterByCategory('${cat}')" class="bg-white p-4 rounded-3xl text-center cursor-pointer hover:bg-amber-50 border border-amber-900">
+      <h3 class="text-xl">${cat}</h3>
+    </div>
+  `).join('');
+}
+
+function renderRecipeGrid(list) {
+  document.getElementById('recipeGrid').innerHTML = list.map(r => `
+    <div class="bg-white p-6 rounded-3xl shadow cursor-pointer">
+      <h3 class="text-2xl">${r.title}</h3>
+      <p class="text-amber-800">${r.category}</p>
+    </div>
+  `).join('');
+}
+
+function filterByCategory(cat) {
+  const filtered = recipes.filter(r => r.category === cat);
+  showAllRecipes();
+  renderRecipeGrid(filtered);
+}
 
 // Initialize
 setupImageUpload();
