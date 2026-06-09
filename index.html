@@ -35,13 +35,13 @@
   <div class="max-w-4xl px-6">
     <h1 class="text-6xl md:text-8xl font-serif italic tracking-wider mb-6">Keely & Brian's<br>Family Recipes</h1>
     <p class="text-3xl mb-12">Love. Tradition. Flavor.</p>
-    <button onclick="showRecipesPage()" class="bg-amber-700 hover:bg-amber-600 text-xl px-12 py-5 rounded-full">Family Favorites ❤️</button>
+    <button onclick="showRecipesPage()" class="bg-amber-700 hover:bg-amber-600 text-xl px-12 py-5 rounded-full">View Family Favorites</button>
   </div>
 </div>
 
-<!-- RECIPES PAGE (Search + Categories) -->
+<!-- RECIPES PAGE -->
 <div id="recipesPage" class="max-w-6xl mx-auto px-6 py-8 hidden">
-  <input id="searchInput" type="text" placeholder="Search recipes or ingredients..." 
+  <input id="searchInput" type="text" placeholder="Search recipes..." 
          class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-amber-900 mb-8" onkeyup="filterRecipes()">
 
   <h2 class="text-4xl font-serif mb-6">Categories</h2>
@@ -50,20 +50,19 @@
   <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 </div>
 
-<!-- ADD RECIPE PAGE -->
+<!-- ADD RECIPE -->
 <div id="addForm" class="max-w-2xl mx-auto px-6 py-8 hidden">
   <h2 class="text-4xl font-serif mb-8">Add a New Family Recipe</h2>
   <div class="bg-white p-8 rounded-3xl shadow">
     <input id="newTitle" placeholder="Recipe Title *" class="w-full mb-4 p-4 border rounded-2xl text-xl">
 
-    <!-- Camera Section -->
     <div class="mb-8 p-6 border-2 border-dashed border-amber-700 rounded-3xl">
-      <label class="block text-lg mb-3">📸 Take Photo of Recipe Card (Optional)</label>
+      <label class="block text-lg mb-3">📸 Take Photo of Recipe Card</label>
       <div class="grid grid-cols-2 gap-4">
         <button onclick="openCamera()" class="bg-amber-700 hover:bg-amber-600 text-white py-6 rounded-2xl flex flex-col items-center gap-2">
           <i class="fas fa-camera text-3xl"></i><span>Take Photo</span>
         </button>
-        <div id="dropZone" class="drop-zone p-6 text-center rounded-2xl cursor-pointer flex flex-col justify-center">
+        <div id="dropZone" class="drop-zone p-6 text-center rounded-2xl cursor-pointer">
           <i class="fas fa-cloud-upload-alt text-3xl text-amber-700"></i>
           <span class="mt-2">Upload Photo</span>
           <input type="file" id="imageUpload" accept="image/*" class="hidden">
@@ -71,7 +70,7 @@
       </div>
       <div id="previewImages" class="flex flex-wrap gap-3 mt-4"></div>
       <button onclick="runOCR()" class="mt-4 w-full bg-amber-800 hover:bg-amber-700 text-white py-3 rounded-2xl">Extract Text with OCR</button>
-      <p id="ocrStatus" class="text-center text-sm mt-2 text-gray-600"></p>
+      <p id="ocrStatus" class="text-center text-sm mt-2"></p>
     </div>
 
     <select id="newCategory" class="w-full mb-4 p-4 border rounded-2xl text-lg">
@@ -122,7 +121,7 @@ function hideAll() {
   document.getElementById('addForm').classList.add('hidden');
 }
 
-// Camera & Upload
+// Camera
 function openCamera() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -135,111 +134,4 @@ function openCamera() {
 function setupImageUpload() {
   const dropZone = document.getElementById('dropZone');
   const fileInput = document.getElementById('imageUpload');
-  dropZone.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', () => handleFiles(fileInput.files));
-}
-
-function handleFiles(files) {
-  Array.from(files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      newRecipeImages.push(e.target.result);
-      renderPreviewImages();
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function renderPreviewImages() {
-  document.getElementById('previewImages').innerHTML = newRecipeImages.map((src, i) => `
-    <div class="relative inline-block">
-      <img src="${src}" class="w-24 h-24 object-cover rounded-xl">
-      <button onclick="removePreviewImage(${i})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs">×</button>
-    </div>
-  `).join('');
-}
-
-function removePreviewImage(i) {
-  newRecipeImages.splice(i, 1);
-  renderPreviewImages();
-}
-
-// OCR
-async function runOCR() {
-  if (newRecipeImages.length === 0) return alert("Please take or upload a photo first");
-  const status = document.getElementById('ocrStatus');
-  status.textContent = "Scanning...";
-
-  if (!tesseractWorker) tesseractWorker = await Tesseract.createWorker('eng');
-
-  let fullText = "";
-  for (let img of newRecipeImages) {
-    const result = await Tesseract.recognize(img, 'eng');
-    fullText += result.data.text + "\n";
-  }
-
-  const lines = fullText.split('\n').map(l => l.trim()).filter(l => l);
-  document.getElementById('newIngredients').value = lines.slice(0, 12).join('\n');
-  document.getElementById('newInstructions').value = lines.slice(12).join('\n');
-  status.textContent = "✅ Text extracted!";
-}
-
-// Add Recipe
-function addNewRecipe() {
-  const title = document.getElementById('newTitle').value.trim();
-  if (!title) return alert("Please enter a recipe title!");
-
-  const newRecipe = {
-    id: Date.now(),
-    title: title,
-    category: document.getElementById('newCategory').value || "Uncategorized",
-    ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
-    instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
-    images: newRecipeImages.length ? newRecipeImages : ["https://picsum.photos/id/201/800/600"]
-  };
-
-  recipes.unshift(newRecipe);
-  localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
-
-  alert(`✅ "${title}" has been added!`);
-  showRecipesPage();
-}
-
-// Render
-function renderCategories() {
-  const cats = ["Breakfast", "Appetizers", "Salads", "Soups", "Pasta", "Side Dishes", "Bread", 
-                "Main Dishes", "Desserts", "Beverages", "Condiments", "Seasonings", "Sauces", "Specialty Items"];
-  document.getElementById('categories').innerHTML = cats.map(cat => `
-    <div onclick="filterByCategory('${cat}')" class="bg-white p-4 rounded-3xl text-center cursor-pointer hover:bg-amber-50 border border-amber-900">
-      <h3 class="text-xl">${cat}</h3>
-    </div>
-  `).join('');
-}
-
-function renderRecipeGrid(list) {
-  document.getElementById('recipeGrid').innerHTML = list.map(r => `
-    <div class="bg-white p-6 rounded-3xl shadow cursor-pointer">
-      <h3 class="text-2xl">${r.title}</h3>
-      <p class="text-amber-800">${r.category}</p>
-    </div>
-  `).join('');
-}
-
-function filterByCategory(cat) {
-  const filtered = recipes.filter(r => r.category === cat);
-  renderRecipeGrid(filtered);
-}
-
-function filterRecipes() {
-  const term = document.getElementById('searchInput').value.toLowerCase();
-  const filtered = recipes.filter(r => r.title.toLowerCase().includes(term));
-  renderRecipeGrid(filtered);
-}
-
-// Initialize
-setupImageUpload();
-renderCategories();
-showHome();
-</script>
-</body>
-</html>
+  dropZone.addEventListener('
