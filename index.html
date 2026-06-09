@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keely & Brian's Family Recipes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { font-family: 'Georgia', serif; background: #f9f5eb; }
+    .hero { background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('https://picsum.photos/id/1080/2000/1200'); background-size: cover; background-position: center; }
+    .recipe-card { transition: all 0.3s; }
+    .recipe-card:hover { transform: scale(1.04); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15); }
+  </style>
+</head>
+<body class="min-h-screen pb-20">
+
+  <!-- Navbar -->
+  <nav class="bg-amber-900 text-white py-5 sticky top-0 z-50 shadow-md">
+    <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+      <h1 class="text-3xl font-bold italic">Keely & Brian's</h1>
+      <div class="flex gap-8 text-lg">
+        <a href="#" onclick="showHome()" class="hover:text-amber-300">Home</a>
+        <a href="#" onclick="showAllRecipes()" class="hover:text-amber-300">Recipes</a>
+        <a href="#" onclick="showAddForm()" class="hover:text-amber-300 font-medium">+ Add Recipe</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+  <div id="home" class="hero h-screen flex items-center justify-center text-center text-white">
+    <div class="max-w-4xl px-6">
+      <h1 class="text-6xl md:text-8xl font-serif italic tracking-wider mb-6">Keely & Brian's<br>Family Recipes</h1>
+      <p class="text-3xl mb-12">Love. Tradition. Flavor.</p>
+      <button onclick="showAllRecipes()" class="bg-amber-700 hover:bg-amber-600 text-xl px-12 py-5 rounded-full">Explore the Collection →</button>
+    </div>
+  </div>
+
+  <!-- Slideshow -->
+  <div class="max-w-6xl mx-auto px-6 -mt-12 relative z-10">
+    <div id="slideshow" class="h-96 rounded-3xl overflow-hidden shadow-2xl"></div>
+  </div>
+
+  <!-- Search -->
+  <div class="max-w-6xl mx-auto px-6 py-10">
+    <input id="searchInput" type="text" placeholder="Search recipes, ingredients, or tags..." 
+           class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-amber-900 focus:outline-none" onkeyup="filterRecipes()">
+  </div>
+
+  <!-- Categories -->
+  <div class="max-w-6xl mx-auto px-6">
+    <h2 class="text-4xl font-serif mb-6">Categories</h2>
+    <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+  </div>
+
+  <!-- All Recipes -->
+  <div id="allRecipes" class="max-w-6xl mx-auto px-6 pt-8 hidden">
+    <h2 class="text-4xl font-serif mb-8">Our Family Favorites</h2>
+    <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+  </div>
+
+  <!-- Add New Recipe Form -->
+  <div id="addForm" class="max-w-2xl mx-auto px-6 pt-8 hidden">
+    <h2 class="text-4xl font-serif mb-8">Add a New Family Recipe</h2>
+    <div class="bg-white p-8 rounded-3xl shadow">
+      <input id="newTitle" placeholder="Recipe Title" class="w-full mb-4 p-4 border rounded-2xl text-xl">
+      <input id="newCategory" placeholder="Category (e.g. Breakfast, Main Dishes)" class="w-full mb-4 p-4 border rounded-2xl">
+      <input id="newTags" placeholder="Tags (comma separated, e.g. spicy, quick, holiday)" class="w-full mb-4 p-4 border rounded-2xl">
+      <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
+      <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
+      <input id="newImages" placeholder="Image URLs (comma separated) - optional" class="w-full p-4 border rounded-2xl mb-6">
+      <button onclick="addNewRecipe()" class="w-full bg-amber-900 text-white py-5 text-xl rounded-3xl">Add Recipe to Cookbook</button>
+    </div>
+  </div>
+
+  <!-- Recipe Modal -->
+  <div id="recipeModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+    <div class="bg-white max-w-4xl w-full rounded-3xl max-h-[95vh] overflow-auto">
+      <div class="p-8">
+        <button onclick="closeModal()" class="float-right text-4xl leading-none hover:text-amber-700">×</button>
+        <h2 id="modalTitle" class="text-4xl font-serif mb-6 pr-12"></h2>
+        
+        <!-- Image Carousel -->
+        <div id="carousel" class="relative h-80 bg-gray-100 rounded-2xl mb-8 overflow-hidden"></div>
+
+        <div class="grid md:grid-cols-2 gap-10">
+          <div>
+            <h3 class="text-2xl mb-4 flex items-center gap-2"><i class="fas fa-carrot"></i> Ingredients</h3>
+            <div id="ingredientsList" class="space-y-3"></div>
+            <button onclick="printShoppingList()" class="mt-6 w-full bg-amber-800 hover:bg-amber-700 text-white py-4 rounded-2xl">🛒 Print Shopping List</button>
+          </div>
+          <div>
+            <h3 class="text-2xl mb-4">Instructions</h3>
+            <div id="instructionsList" class="space-y-4 text-lg"></div>
+          </div>
+        </div>
+
+        <!-- Family Notes -->
+        <div class="mt-12">
+          <h3 class="text-2xl mb-3">Family Notes & Memories</h3>
+          <textarea id="notesArea" class="w-full h-32 p-5 border-2 border-amber-200 rounded-2xl" placeholder="Add tips, who loves this, variations..."></textarea>
+          <button onclick="saveNotes()" class="mt-3 bg-amber-700 text-white px-8 py-3 rounded-xl">Save Notes</button>
+        </div>
+
+        <button onclick="printRecipe()" class="mt-10 w-full bg-amber-900 text-white py-6 text-xl rounded-3xl">🖨️ Print Full Recipe</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ==================== RECIPES DATA ====================
+let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [
+  {
+    id: 1,
+    title: "Grandma's Buttermilk Pancakes",
+    category: "Breakfast",
+    tags: ["pancakes", "breakfast", "sweet"],
+    images: ["https://picsum.photos/id/201/800/600", "https://picsum.photos/id/292/800/600"],
+    ingredients: ["2 cups all-purpose flour", "2 tbsp sugar", "2 tsp baking powder", "1 tsp baking soda", "½ tsp salt", "2 cups buttermilk", "2 eggs", "¼ cup melted butter"],
+    instructions: ["Mix dry ingredients together", "Whisk wet ingredients separately", "Combine until just mixed (lumps are good)", "Cook on hot griddle until bubbles form"]
+  },
+  {
+    id: 2,
+    title: "Brian's Famous Chili",
+    category: "Main Dishes",
+    tags: ["chili", "beef", "spicy", "dinner"],
+    images: ["https://picsum.photos/id/431/800/600", "https://picsum.photos/id/870/800/600"],
+    ingredients: ["2 lbs ground beef", "2 cans kidney beans", "1 large onion chopped", "3 cloves garlic", "2 cans diced tomatoes", "3 tbsp chili powder", "1 tbsp cumin"],
+    instructions: ["Brown beef with onion and garlic", "Add spices and cook 1 minute", "Add tomatoes and beans", "Simmer on low for 2 hours"]
+  }
+];
+
+// Save recipes to browser storage
+function saveRecipes() {
+  localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
+}
+
+// ==================== RENDER FUNCTIONS ====================
+function renderCategories() {
+  const cats = {};
+  recipes.forEach(r => cats[r.category] = (cats[r.category] || 0) + 1);
+  
+  document.getElementById('categories').innerHTML = Object.keys(cats).map(cat => `
+    <div onclick="filterByCategory('${cat}')" class="bg-white p-6 rounded-3xl text-center cursor-pointer hover:bg-amber-50 border border-amber-900">
+      <h3 class="text-2xl font-serif">${cat}</h3>
+      <p class="text-amber-800">${cats[cat]} recipes</p>
+    </div>
+  `).join('');
+}
+
+function renderRecipeGrid(filteredRecipes) {
+  document.getElementById('recipeGrid').innerHTML = filteredRecipes.map(r => `
+    <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer border border-amber-900">
+      <img src="${r.images[0]}" class="w-full h-56 object-cover">
+      <div class="p-6">
+        <h3 class="text-2xl font-serif">${r.title}</h3>
+        <div class="flex flex-wrap gap-2 mt-3">
+          ${r.tags.map(tag => `<span class="text-xs bg-amber-100 px-3 py-1 rounded-full">${tag}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==================== MODAL & CAROUSEL ====================
+let currentRecipe = null;
+let currentImageIndex = 0;
+
+function openRecipe(id) {
+  currentRecipe = recipes.find(r => r.id === id);
+  document.getElementById('modalTitle').textContent = currentRecipe.title;
+  
+  renderCarousel();
+  
+  // Ingredients with checkboxes
+  let ingHTML = currentRecipe.ingredients.map((ing, i) => `
+    <label class="flex items-center gap-3 cursor-pointer text-lg">
+      <input type="checkbox" id="ing-${i}" class="w-5 h-5 accent-amber-800">
+      <span>${ing}</span>
+    </label>
+  `).join('');
+  document.getElementById('ingredientsList').innerHTML = ingHTML;
+
+  // Instructions
+  document.getElementById('instructionsList').innerHTML = currentRecipe.instructions.map((step, i) => `
+    <div class="flex gap-4"><span class="font-bold text-amber-800">${i+1}.</span><span>${step}</span></div>
+  `).join('');
+
+  // Load saved notes
+  document.getElementById('notesArea').value = localStorage.getItem(`notes-${currentRecipe.id}`) || '';
+
+  document.getElementById('recipeModal').classList.remove('hidden');
+}
+
+function renderCarousel() {
+  currentImageIndex = 0;
+  const container = document.getElementById('carousel');
+  container.innerHTML = `
+    <img id="carouselImg" src="${currentRecipe.images[0]}" class="w-full h-full object-cover">
+    <button onclick="prevImage()" class="absolute left-4 top-1/2 bg-black/50 text-white w-10 h-10 rounded-full">←</button>
+    <button onclick="nextImage()" class="absolute right-4 top-1/2 bg-black/50 text-white w-10 h-10 rounded-full">→</button>
+  `;
+}
+
+function nextImage() {
+  currentImageIndex = (currentImageIndex + 1) % currentRecipe.images.length;
+  document.getElementById('carouselImg').src = currentRecipe.images[currentImageIndex];
+}
+function prevImage() {
+  currentImageIndex = (currentImageIndex - 1 + currentRecipe.images.length) % currentRecipe.images.length;
+  document.getElementById('carouselImg').src = currentRecipe.images[currentImageIndex];
+}
+
+// ==================== PRINT & NOTES ====================
+function printRecipe() { window.print(); }
+
+function printShoppingList() {
+  const unchecked = [];
+  document.querySelectorAll('#ingredientsList input[type="checkbox"]').forEach((cb, i) => {
+    if (!cb.checked) unchecked.push(currentRecipe.ingredients[i]);
+  });
+  const win = window.open('', '', 'height=600,width=800');
+  win.document.write(`<h1>Shopping List — ${currentRecipe.title}</h1><ul>${unchecked.map(item => `<li>${item}</li>`).join('')}</ul>`);
+  win.document.close();
+  win.print();
+}
+
+function saveNotes() {
+  localStorage.setItem(`notes-${currentRecipe.id}`, document.getElementById('notesArea').value);
+  alert("Notes saved! 👍");
+}
+
+// ==================== ADD RECIPE ====================
+function showAddForm() {
+  document.getElementById('addForm').classList.remove('hidden');
+  document.getElementById('allRecipes').classList.add('hidden');
+}
+
+function addNewRecipe() {
+  const title = document.getElementById('newTitle').value.trim();
+  if (!title) return alert("Please enter a recipe title.");
+
+  const newRecipe = {
+    id: Date.now(),
+    title: title,
+    category: document.getElementById('newCategory').value.trim() || "Uncategorized",
+    tags: document.getElementById('newTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
+    images: document.getElementById('newImages').value ? 
+            document.getElementById('newImages').value.split(',').map(u => u.trim()) : 
+            ["https://picsum.photos/id/201/800/600"],
+    ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
+    instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean)
+  };
+
+  recipes.unshift(newRecipe);
+  saveRecipes();
+  alert("✅ Recipe added successfully!");
+  
+  // Clear form
+  document.getElementById('newTitle').value = '';
+  document.getElementById('newCategory').value = '';
+  document.getElementById('newTags').value = '';
+  document.getElementById('newIngredients').value = '';
+  document.getElementById('newInstructions').value = '';
+  document.getElementById('newImages').value = '';
+
+  showAllRecipes();
+}
+
+// ==================== SEARCH & FILTER ====================
+function filterRecipes() {
+  const term = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = recipes.filter(r => 
+    r.title.toLowerCase().includes(term) ||
+    r.tags.some(t => t.includes(term)) ||
+    r.ingredients.some(i => i.toLowerCase().includes(term))
+  );
+  renderRecipeGrid(filtered);
+}
+
+function filterByCategory(cat) {
+  const filtered = recipes.filter(r => r.category === cat);
+  document.getElementById('allRecipes').classList.remove('hidden');
+  renderRecipeGrid(filtered);
+}
+
+function showHome() {
+  document.getElementById('home').scrollIntoView({ behavior: "smooth" });
+  document.getElementById('allRecipes').classList.add('hidden');
+  document.getElementById('addForm').classList.add('hidden');
+}
+
+function showAllRecipes() {
+  document.getElementById('allRecipes').classList.remove('hidden');
+  document.getElementById('addForm').classList.add('hidden');
+  renderRecipeGrid(recipes);
+}
+
+function closeModal() {
+  document.getElementById('recipeModal').classList.add('hidden');
+}
+
+// ==================== SLIDESHOW ====================
+function startSlideshow() {
+  const images = [
+    "https://picsum.photos/id/1080/2000/1200",
+    "https://picsum.photos/id/201/2000/1200",
+    "https://picsum.photos/id/292/2000/1200",
+    "https://picsum.photos/id/431/2000/1200"
+  ];
+  let i = 0;
+  const slideContainer = document.getElementById('slideshow');
+  
+  setInterval(() => {
+    i = (i + 1) % images.length;
+    slideContainer.style.background = `url('${images[i]}') center/cover no-repeat`;
+    slideContainer.style.height = '24rem';
+  }, 5000);
+}
+
+// ==================== INITIALIZE ====================
+renderCategories();
+renderRecipeGrid(recipes);
+startSlideshow();
+showHome();
+</script>
+</body>
+</html>
