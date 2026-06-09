@@ -15,7 +15,6 @@
       min-height: 100vh;
     }
     .drop-zone { border: 3px dashed #d97706; }
-    .heart { cursor: pointer; }
   </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -40,7 +39,7 @@
   </div>
 </div>
 
-<!-- Recipes Page (Search + Categories) -->
+<!-- RECIPES PAGE (Search + Categories) -->
 <div id="recipesPage" class="max-w-6xl mx-auto px-6 py-8 hidden">
   <input id="searchInput" type="text" placeholder="Search recipes or ingredients..." 
          class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-amber-900 mb-8" onkeyup="filterRecipes()">
@@ -48,16 +47,16 @@
   <h2 class="text-4xl font-serif mb-6">Categories</h2>
   <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10"></div>
 
-  <h2 class="text-4xl font-serif mb-6">Family Favorites ❤️</h2>
   <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 </div>
 
-<!-- Add Recipe Form -->
+<!-- ADD RECIPE PAGE -->
 <div id="addForm" class="max-w-2xl mx-auto px-6 py-8 hidden">
   <h2 class="text-4xl font-serif mb-8">Add a New Family Recipe</h2>
   <div class="bg-white p-8 rounded-3xl shadow">
     <input id="newTitle" placeholder="Recipe Title *" class="w-full mb-4 p-4 border rounded-2xl text-xl">
 
+    <!-- Camera Section -->
     <div class="mb-8 p-6 border-2 border-dashed border-amber-700 rounded-3xl">
       <label class="block text-lg mb-3">📸 Take Photo of Recipe Card (Optional)</label>
       <div class="grid grid-cols-2 gap-4">
@@ -110,7 +109,7 @@ let tesseractWorker = null;
 
 // Navigation
 function showHome() { hideAll(); document.getElementById('home').style.display = 'flex'; }
-function showAllRecipes() { hideAll(); document.getElementById('recipesPage').classList.remove('hidden'); renderRecipeGrid(recipes); }
+function showRecipesPage() { hideAll(); document.getElementById('recipesPage').classList.remove('hidden'); renderRecipeGrid(recipes); }
 function showAddForm() { 
   hideAll(); 
   newRecipeImages = []; 
@@ -123,20 +122,119 @@ function hideAll() {
   document.getElementById('addForm').classList.add('hidden');
 }
 
-// Camera, Upload, OCR, Add Recipe functions (same as before - working)
-function openCamera() { /* ... */ }
-function setupImageUpload() { /* ... */ }
-function handleFiles(files) { /* ... */ }
-function renderPreviewImages() { /* ... */ }
-function removePreviewImage(i) { /* ... */ }
-async function runOCR() { /* ... */ }
+// Camera & Upload
+function openCamera() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = e => handleFiles(e.target.files);
+  input.click();
+}
 
-function addNewRecipe() { /* working version from before */ }
+function setupImageUpload() {
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('imageUpload');
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+}
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      newRecipeImages.push(e.target.result);
+      renderPreviewImages();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviewImages() {
+  document.getElementById('previewImages').innerHTML = newRecipeImages.map((src, i) => `
+    <div class="relative inline-block">
+      <img src="${src}" class="w-24 h-24 object-cover rounded-xl">
+      <button onclick="removePreviewImage(${i})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs">×</button>
+    </div>
+  `).join('');
+}
+
+function removePreviewImage(i) {
+  newRecipeImages.splice(i, 1);
+  renderPreviewImages();
+}
+
+// OCR
+async function runOCR() {
+  if (newRecipeImages.length === 0) return alert("Please take or upload a photo first");
+  const status = document.getElementById('ocrStatus');
+  status.textContent = "Scanning...";
+
+  if (!tesseractWorker) tesseractWorker = await Tesseract.createWorker('eng');
+
+  let fullText = "";
+  for (let img of newRecipeImages) {
+    const result = await Tesseract.recognize(img, 'eng');
+    fullText += result.data.text + "\n";
+  }
+
+  const lines = fullText.split('\n').map(l => l.trim()).filter(l => l);
+  document.getElementById('newIngredients').value = lines.slice(0, 12).join('\n');
+  document.getElementById('newInstructions').value = lines.slice(12).join('\n');
+  status.textContent = "✅ Text extracted!";
+}
+
+// Add Recipe
+function addNewRecipe() {
+  const title = document.getElementById('newTitle').value.trim();
+  if (!title) return alert("Please enter a recipe title!");
+
+  const newRecipe = {
+    id: Date.now(),
+    title: title,
+    category: document.getElementById('newCategory').value || "Uncategorized",
+    ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
+    instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
+    images: newRecipeImages.length ? newRecipeImages : ["https://picsum.photos/id/201/800/600"]
+  };
+
+  recipes.unshift(newRecipe);
+  localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
+
+  alert(`✅ "${title}" has been added!`);
+  showRecipesPage();
+}
 
 // Render
-function renderCategories() { /* your list */ }
-function renderRecipeGrid(list) { /* with heart favorites */ }
-function filterByCategory(cat) { /* ... */ }
+function renderCategories() {
+  const cats = ["Breakfast", "Appetizers", "Salads", "Soups", "Pasta", "Side Dishes", "Bread", 
+                "Main Dishes", "Desserts", "Beverages", "Condiments", "Seasonings", "Sauces", "Specialty Items"];
+  document.getElementById('categories').innerHTML = cats.map(cat => `
+    <div onclick="filterByCategory('${cat}')" class="bg-white p-4 rounded-3xl text-center cursor-pointer hover:bg-amber-50 border border-amber-900">
+      <h3 class="text-xl">${cat}</h3>
+    </div>
+  `).join('');
+}
+
+function renderRecipeGrid(list) {
+  document.getElementById('recipeGrid').innerHTML = list.map(r => `
+    <div class="bg-white p-6 rounded-3xl shadow cursor-pointer">
+      <h3 class="text-2xl">${r.title}</h3>
+      <p class="text-amber-800">${r.category}</p>
+    </div>
+  `).join('');
+}
+
+function filterByCategory(cat) {
+  const filtered = recipes.filter(r => r.category === cat);
+  renderRecipeGrid(filtered);
+}
+
+function filterRecipes() {
+  const term = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = recipes.filter(r => r.title.toLowerCase().includes(term));
+  renderRecipeGrid(filtered);
+}
 
 // Initialize
 setupImageUpload();
