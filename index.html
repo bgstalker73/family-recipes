@@ -6,7 +6,6 @@
   <title>Keely & Brian's Family Recipes</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     body { font-family: 'Georgia', serif; background: #f9f5eb; }
     .hero { 
@@ -14,7 +13,6 @@
                   url('PXL_20251206_224748469.jpg') center/cover no-repeat fixed;
       min-height: 100vh;
     }
-    .drop-zone { border: 3px dashed #d97706; }
   </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -41,38 +39,15 @@
 
 <!-- RECIPES PAGE -->
 <div id="recipesPage" class="max-w-6xl mx-auto px-6 py-8 hidden">
-  <input id="searchInput" type="text" placeholder="Search recipes..." 
-         class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-amber-900 mb-8" onkeyup="filterRecipes()">
-
-  <h2 class="text-4xl font-serif mb-6">Categories</h2>
-  <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10"></div>
-
+  <h2 class="text-4xl font-serif mb-6">Family Favorites</h2>
   <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 </div>
 
-<!-- ADD RECIPE -->
+<!-- ADD RECIPE PAGE -->
 <div id="addForm" class="max-w-2xl mx-auto px-6 py-8 hidden">
   <h2 class="text-4xl font-serif mb-8">Add a New Family Recipe</h2>
   <div class="bg-white p-8 rounded-3xl shadow">
     <input id="newTitle" placeholder="Recipe Title *" class="w-full mb-4 p-4 border rounded-2xl text-xl">
-
-    <div class="mb-8 p-6 border-2 border-dashed border-amber-700 rounded-3xl">
-      <label class="block text-lg mb-3">📸 Take Photo of Recipe Card</label>
-      <div class="grid grid-cols-2 gap-4">
-        <button onclick="openCamera()" class="bg-amber-700 hover:bg-amber-600 text-white py-6 rounded-2xl flex flex-col items-center gap-2">
-          <i class="fas fa-camera text-3xl"></i><span>Take Photo</span>
-        </button>
-        <div id="dropZone" class="drop-zone p-6 text-center rounded-2xl cursor-pointer">
-          <i class="fas fa-cloud-upload-alt text-3xl text-amber-700"></i>
-          <span class="mt-2">Upload Photo</span>
-          <input type="file" id="imageUpload" accept="image/*" class="hidden">
-        </div>
-      </div>
-      <div id="previewImages" class="flex flex-wrap gap-3 mt-4"></div>
-      <button onclick="runOCR()" class="mt-4 w-full bg-amber-800 hover:bg-amber-700 text-white py-3 rounded-2xl">Extract Text with OCR</button>
-      <p id="ocrStatus" class="text-center text-sm mt-2"></p>
-    </div>
-
     <select id="newCategory" class="w-full mb-4 p-4 border rounded-2xl text-lg">
       <option value="">Select Category</option>
       <option value="Breakfast">Breakfast</option>
@@ -85,14 +60,10 @@
       <option value="Main Dishes">Main Dishes</option>
       <option value="Desserts">Desserts</option>
       <option value="Beverages">Beverages</option>
-      <option value="Condiments">Condiments</option>
-      <option value="Seasonings">Seasonings</option>
-      <option value="Sauces">Sauces</option>
       <option value="Specialty Items">Specialty Items</option>
     </select>
-
-    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
-    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
+    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-32 p-4 border rounded-2xl mb-4"></textarea>
+    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-32 p-4 border rounded-2xl mb-4"></textarea>
 
     <button onclick="addNewRecipe()" class="w-full bg-amber-900 hover:bg-amber-800 text-white py-6 text-xl rounded-3xl font-bold">
       ADD RECIPE TO COOKBOOK
@@ -103,35 +74,72 @@
 <script>
 // Data
 let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
-let newRecipeImages = [];
-let tesseractWorker = null;
 
-// Navigation
-function showHome() { hideAll(); document.getElementById('home').style.display = 'flex'; }
-function showRecipesPage() { hideAll(); document.getElementById('recipesPage').classList.remove('hidden'); renderRecipeGrid(recipes); }
-function showAddForm() { 
-  hideAll(); 
-  newRecipeImages = []; 
-  document.getElementById('previewImages').innerHTML = '';
-  document.getElementById('addForm').classList.remove('hidden'); 
+// Show pages
+function showHome() {
+  hideAll();
+  document.getElementById('home').style.display = 'flex';
 }
+
+function showRecipesPage() {
+  hideAll();
+  document.getElementById('recipesPage').classList.remove('hidden');
+  renderRecipes();
+}
+
+function showAddForm() {
+  hideAll();
+  document.getElementById('addForm').classList.remove('hidden');
+}
+
 function hideAll() {
   document.getElementById('home').style.display = 'none';
   document.getElementById('recipesPage').classList.add('hidden');
   document.getElementById('addForm').classList.add('hidden');
 }
 
-// Camera
-function openCamera() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.capture = 'environment';
-  input.onchange = e => handleFiles(e.target.files);
-  input.click();
+// Add Recipe
+function addNewRecipe() {
+  const title = document.getElementById('newTitle').value.trim();
+  if (!title) {
+    alert("Please enter a recipe title!");
+    return;
+  }
+
+  const newRecipe = {
+    id: Date.now(),
+    title: title,
+    category: document.getElementById('newCategory').value || "Uncategorized",
+    ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(i => i),
+    instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(i => i)
+  };
+
+  recipes.unshift(newRecipe);
+  localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
+
+  alert(`✅ "${title}" has been added!`);
+
+  // Clear form
+  document.getElementById('newTitle').value = '';
+  document.getElementById('newCategory').value = '';
+  document.getElementById('newIngredients').value = '';
+  document.getElementById('newInstructions').value = '';
+
+  showRecipesPage();
 }
 
-function setupImageUpload() {
-  const dropZone = document.getElementById('dropZone');
-  const fileInput = document.getElementById('imageUpload');
-  dropZone.addEventListener('
+function renderRecipes() {
+  const container = document.getElementById('recipeGrid');
+  container.innerHTML = recipes.map(r => `
+    <div class="bg-white p-6 rounded-3xl shadow">
+      <h3 class="text-2xl font-serif">${r.title}</h3>
+      <p class="text-amber-800 mt-2">${r.category}</p>
+    </div>
+  `).join('');
+}
+
+// Initialize
+showHome();
+</script>
+</body>
+</html>
