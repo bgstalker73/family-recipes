@@ -15,8 +15,10 @@
       min-height: 100vh;
     }
     .drop-zone { border: 3px dashed #d97706; }
-    .heart { cursor: pointer; font-size: 1.8rem; transition: all 0.2s; }
-    .heart:hover { transform: scale(1.2); }
+    .heart { cursor: pointer; font-size: 2.2rem; transition: all 0.2s; }
+    .heart:hover { transform: scale(1.3); }
+    .recipe-card { transition: all 0.3s; cursor: pointer; }
+    .recipe-card:hover { transform: scale(1.04); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15); }
   </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -42,20 +44,18 @@
   </div>
 </div>
 
-<!-- FAMILY FAVORITES PAGE -->
+<!-- FAMILY FAVORITES -->
 <div id="favoritesPage" class="max-w-6xl mx-auto px-6 py-8 hidden">
   <h2 class="text-4xl font-serif mb-6">Most Recent Family Favorites ❤️</h2>
   <div id="favoritesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 </div>
 
-<!-- RECIPES PAGE (with category buttons) -->
+<!-- RECIPES PAGE -->
 <div id="recipesPage" class="max-w-6xl mx-auto px-6 py-8 hidden">
-  <input id="searchInput" type="text" placeholder="Search recipes..." 
+  <input id="searchInput" type="text" placeholder="Search recipes or tags..." 
          class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-amber-900 mb-8" onkeyup="filterRecipes()">
-  
   <h2 class="text-4xl font-serif mb-6">Categories</h2>
   <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-
   <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10"></div>
 </div>
 
@@ -63,13 +63,28 @@
 <div id="addForm" class="max-w-2xl mx-auto px-6 py-8 hidden">
   <h2 class="text-4xl font-serif mb-8">Add a New Family Recipe</h2>
   <div class="bg-white p-8 rounded-3xl shadow">
-    <!-- Title with Heart -->
-    <div class="flex items-center gap-3 mb-4">
+    <div class="flex items-center gap-3 mb-6">
       <button onclick="toggleFavoriteInAdd()" id="addHeart" class="heart text-red-500">♡</button>
       <input id="newTitle" placeholder="Recipe Title *" class="flex-1 p-4 border rounded-2xl text-xl">
     </div>
 
-    <!-- Camera Section -->
+    <select id="newCategory" class="w-full mb-6 p-4 border rounded-2xl text-lg">
+      <option value="">Select Category</option>
+      <option value="Breakfast">Breakfast</option>
+      <option value="Appetizers">Appetizers</option>
+      <option value="Salads">Salads</option>
+      <option value="Soups">Soups</option>
+      <option value="Pasta">Pasta</option>
+      <option value="Side Dishes">Side Dishes</option>
+      <option value="Bread">Bread</option>
+      <option value="Main Dishes">Main Dishes</option>
+      <option value="Desserts">Desserts</option>
+      <option value="Beverages">Beverages</option>
+      <option value="Specialty Items">Specialty Items</option>
+    </select>
+
+    <input id="newTags" placeholder="Tags (comma separated)" class="w-full p-4 border rounded-2xl mb-8 text-lg">
+
     <div class="mb-8 p-6 border-2 border-dashed border-amber-700 rounded-3xl">
       <label class="block text-lg mb-4 font-medium">📸 Scan Old Printed Recipe</label>
       <div class="grid grid-cols-2 gap-4">
@@ -87,23 +102,8 @@
       <p id="ocrStatus" class="text-center text-sm mt-3 text-gray-600"></p>
     </div>
 
-    <select id="newCategory" class="w-full mb-4 p-4 border rounded-2xl text-lg">
-      <option value="">Select Category</option>
-      <option value="Breakfast">Breakfast</option>
-      <option value="Appetizers">Appetizers</option>
-      <option value="Salads">Salads</option>
-      <option value="Soups">Soups</option>
-      <option value="Pasta">Pasta</option>
-      <option value="Side Dishes">Side Dishes</option>
-      <option value="Bread">Bread</option>
-      <option value="Main Dishes">Main Dishes</option>
-      <option value="Desserts">Desserts</option>
-      <option value="Beverages">Beverages</option>
-      <option value="Specialty Items">Specialty Items</option>
-    </select>
-
-    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
-    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-40 p-4 border rounded-2xl mb-4"></textarea>
+    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-40 p-4 border rounded-2xl mb-6"></textarea>
+    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-40 p-4 border rounded-2xl mb-8"></textarea>
 
     <button onclick="addNewRecipe()" class="w-full bg-amber-900 hover:bg-amber-800 text-white py-6 text-xl rounded-3xl font-bold">
       ADD RECIPE TO COOKBOOK
@@ -111,12 +111,90 @@
   </div>
 </div>
 
+<!-- Recipe Modal -->
+<div id="recipeModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+  <div class="bg-white max-w-4xl w-full rounded-3xl max-h-[95vh] overflow-auto">
+    <div class="p-8">
+      <button onclick="closeModal()" class="float-right text-4xl leading-none hover:text-amber-700">×</button>
+      
+      <div class="flex items-center gap-4 mb-4">
+        <h2 id="modalTitle" class="text-4xl font-serif"></h2>
+        <button onclick="toggleFavoriteInModal()" id="modalHeart" class="heart text-red-500">♡</button>
+      </div>
+      <div id="modalTags" class="text-amber-700 mb-6"></div>
+
+      <div id="carousel" class="relative h-80 bg-gray-100 rounded-2xl mb-8 overflow-hidden"></div>
+
+      <div class="flex justify-center mb-8">
+        <button onclick="addDishPhoto()" class="bg-green-700 hover:bg-green-600 text-white px-8 py-4 rounded-2xl flex items-center gap-3 text-lg">
+          <i class="fas fa-camera"></i> 📸 Add Photo of Dish
+        </button>
+      </div>
+
+      <div class="flex justify-end mb-4">
+        <button onclick="startEditing()" id="editBtn" class="bg-amber-700 hover:bg-amber-600 text-white px-6 py-3 rounded-2xl flex items-center gap-2">
+          <i class="fas fa-edit"></i> Edit Ingredients & Instructions
+        </button>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-10">
+        <div>
+          <h3 class="text-2xl mb-4">Ingredients</h3>
+          <div id="ingredientsList" class="space-y-3"></div>
+        </div>
+        <div>
+          <h3 class="text-2xl mb-4">Instructions</h3>
+          <div id="instructionsList" class="space-y-4 text-lg"></div>
+        </div>
+      </div>
+
+      <div class="mt-12">
+        <h3 class="text-2xl mb-3">Family Notes & Memories</h3>
+        <textarea id="notesArea" class="w-full h-32 p-5 border-2 border-amber-200 rounded-2xl"></textarea>
+        <button onclick="saveNotes()" class="mt-3 bg-amber-700 text-white px-8 py-3 rounded-xl">Save Notes</button>
+      </div>
+
+      <button onclick="printIngredientsAndInstructions()" class="mt-6 w-full bg-amber-800 hover:bg-amber-700 text-white py-4 rounded-2xl">
+        🖨️ Print Ingredients & Instructions
+      </button>
+      <button onclick="printOriginalRecipe()" class="mt-4 w-full bg-amber-900 text-white py-6 text-xl rounded-3xl">
+        🖨️ Print Original Recipe (with uploaded image)
+      </button>
+
+      <button onclick="deleteCurrentRecipe()" class="mt-4 w-full bg-red-700 hover:bg-red-600 text-white py-4 rounded-2xl text-lg">
+        🗑️ Delete This Recipe
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 // Data
 let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
 let newRecipeImages = [];
+let currentRecipe = null;
 let tesseractWorker = null;
 let isFavoriteInAdd = false;
+let currentImageIndex = 0;
+let isEditing = false;
+
+const categoryImages = {
+  "Breakfast": "https://picsum.photos/id/1080/800/600",
+  "Appetizers": "https://picsum.photos/id/292/800/600",
+  "Salads": "https://picsum.photos/id/431/800/600",
+  "Soups": "https://picsum.photos/id/669/800/600",
+  "Pasta": "https://picsum.photos/id/201/800/600",
+  "Side Dishes": "https://picsum.photos/id/312/800/600",
+  "Bread": "https://picsum.photos/id/870/800/600",
+  "Main Dishes": "https://picsum.photos/id/1060/800/600",
+  "Desserts": "https://picsum.photos/id/1083/800/600",
+  "Beverages": "https://picsum.photos/id/133/800/600",
+  "Specialty Items": "https://picsum.photos/id/292/800/600"
+};
+
+function getDefaultImage(cat) {
+  return categoryImages[cat] || "https://picsum.photos/id/201/800/600";
+}
 
 function saveRecipes() {
   localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
@@ -141,13 +219,11 @@ function hideAll() {
   document.getElementById('addForm').classList.add('hidden');
 }
 
-// Heart toggle
 function toggleFavoriteInAdd() {
   isFavoriteInAdd = !isFavoriteInAdd;
   document.getElementById('addHeart').innerHTML = isFavoriteInAdd ? '❤️' : '♡';
 }
 
-// Camera & Upload (Fixed)
 function openCamera() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -189,49 +265,180 @@ function removePreviewImage(i) {
   renderPreviewImages();
 }
 
-// OCR
 async function runOCR() {
   if (newRecipeImages.length === 0) return alert("Please take or upload a photo first");
   const status = document.getElementById('ocrStatus');
   status.textContent = "Scanning...";
-
   if (!tesseractWorker) tesseractWorker = await Tesseract.createWorker('eng');
-
   let fullText = "";
   for (let img of newRecipeImages) {
     const result = await Tesseract.recognize(img, 'eng');
     fullText += result.data.text + "\n";
   }
-
   const lines = fullText.split('\n').map(l => l.trim()).filter(l => l);
   document.getElementById('newIngredients').value = lines.slice(0, 12).join('\n');
   document.getElementById('newInstructions').value = lines.slice(12).join('\n');
   status.textContent = "✅ Text extracted!";
 }
 
-// Add Recipe
 function addNewRecipe() {
   const title = document.getElementById('newTitle').value.trim();
   if (!title) return alert("Please enter a recipe title!");
 
+  const category = document.getElementById('newCategory').value || "Uncategorized";
+
   const newRecipe = {
     id: Date.now(),
     title: title,
-    category: document.getElementById('newCategory').value || "Uncategorized",
+    category: category,
+    tags: document.getElementById('newTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
     ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
     instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
-    images: newRecipeImages.length ? newRecipeImages : ["https://picsum.photos/id/201/800/600"],
+    images: newRecipeImages.length ? newRecipeImages : [getDefaultImage(category)],
     favorite: isFavoriteInAdd
   };
 
   recipes.unshift(newRecipe);
-  localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
-
+  saveRecipes();
   alert(`✅ "${title}" has been added!`);
   showRecipesPage();
 }
 
-// Render
+function openRecipe(id) {
+  currentRecipe = recipes.find(r => r.id === id);
+  if (!currentRecipe) return;
+
+  document.getElementById('modalTitle').textContent = currentRecipe.title;
+  document.getElementById('modalTags').innerHTML = currentRecipe.tags && currentRecipe.tags.length ? `Tags: ${currentRecipe.tags.join(', ')}` : '';
+
+  currentImageIndex = 0;
+  renderCarousel();
+
+  document.getElementById('ingredientsList').innerHTML = currentRecipe.ingredients.map(i => `<div class="text-lg">• ${i}</div>`).join('');
+  document.getElementById('instructionsList').innerHTML = currentRecipe.instructions.map((step, i) => `<div>${i+1}. ${step}</div>`).join('');
+
+  document.getElementById('recipeModal').classList.remove('hidden');
+  updateModalHeart();
+  resetEditButton();
+}
+
+function updateModalHeart() {
+  document.getElementById('modalHeart').innerHTML = currentRecipe.favorite ? '❤️' : '♡';
+}
+
+function toggleFavoriteInModal() {
+  if (!currentRecipe) return;
+  currentRecipe.favorite = !currentRecipe.favorite;
+  updateModalHeart();
+  saveRecipes();
+  renderFavorites();
+}
+
+function resetEditButton() {
+  isEditing = false;
+  const btn = document.getElementById('editBtn');
+  btn.innerHTML = '<i class="fas fa-edit"></i> Edit Ingredients & Instructions';
+  btn.onclick = startEditing;
+}
+
+function startEditing() {
+  const ing = document.getElementById('ingredientsList');
+  const inst = document.getElementById('instructionsList');
+  ing.innerHTML = `<textarea id="editIng" class="w-full h-64 p-4 border rounded-2xl">${currentRecipe.ingredients.join('\n')}</textarea>`;
+  inst.innerHTML = `<textarea id="editInst" class="w-full h-64 p-4 border rounded-2xl">${currentRecipe.instructions.join('\n')}</textarea>`;
+  document.getElementById('editBtn').innerHTML = '💾 Save Changes';
+  document.getElementById('editBtn').onclick = saveEdit;
+}
+
+function saveEdit() {
+  currentRecipe.ingredients = document.getElementById('editIng').value.split('\n').map(i => i.trim()).filter(Boolean);
+  currentRecipe.instructions = document.getElementById('editInst').value.split('\n').map(i => i.trim()).filter(Boolean);
+  saveRecipes();
+  alert("✅ Changes saved!");
+  openRecipe(currentRecipe.id);
+}
+
+function renderCarousel() {
+  const container = document.getElementById('carousel');
+  container.innerHTML = `
+    <img id="carouselImg" src="${currentRecipe.images[0]}" class="w-full h-full object-cover rounded-2xl">
+    <button onclick="prevImage()" class="absolute left-4 top-1/2 bg-black/50 text-white w-10 h-10 rounded-full">←</button>
+    <button onclick="nextImage()" class="absolute right-4 top-1/2 bg-black/50 text-white w-10 h-10 rounded-full">→</button>
+  `;
+}
+
+function nextImage() {
+  currentImageIndex = (currentImageIndex + 1) % currentRecipe.images.length;
+  document.getElementById('carouselImg').src = currentRecipe.images[currentImageIndex];
+}
+
+function prevImage() {
+  currentImageIndex = (currentImageIndex - 1 + currentRecipe.images.length) % currentRecipe.images.length;
+  document.getElementById('carouselImg').src = currentRecipe.images[currentImageIndex];
+}
+
+function closeModal() { document.getElementById('recipeModal').classList.add('hidden'); }
+function addDishPhoto() {
+  if (!currentRecipe) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      if (!currentRecipe.images) currentRecipe.images = [];
+      currentRecipe.images.push(ev.target.result);
+      saveRecipes();
+      renderCarousel();
+      alert("✅ Photo added!");
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function saveNotes() { alert("Notes saved!"); }
+
+function printIngredientsAndInstructions() {
+  if (!currentRecipe) return;
+  const win = window.open('', '', 'height=700,width=600');
+  win.document.write(`
+    <h1 style="text-align:center">${currentRecipe.title}</h1>
+    <h2>Ingredients</h2>
+    <ul>${currentRecipe.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+    <h2>Instructions</h2>
+    <ol>${currentRecipe.instructions.map((step, i) => `<li>${step}</li>`).join('')}</ol>
+  `);
+  win.document.close();
+  win.print();
+}
+
+function printOriginalRecipe() {
+  if (!currentRecipe) return;
+  const win = window.open('', '', 'height=700,width=800');
+  let imageHtml = currentRecipe.images && currentRecipe.images[0] ? 
+    `<img src="${currentRecipe.images[0]}" style="max-width:100%; margin:20px auto; display:block;">` : '';
+  win.document.write(`
+    <h1 style="text-align:center">${currentRecipe.title}</h1>
+    ${imageHtml}
+  `);
+  win.document.close();
+  win.print();
+}
+
+function deleteCurrentRecipe() {
+  if (!currentRecipe) return;
+  if (!confirm(`Delete "${currentRecipe.title}" permanently?`)) return;
+  recipes = recipes.filter(r => r.id !== currentRecipe.id);
+  saveRecipes();
+  alert("Recipe deleted.");
+  closeModal();
+  showRecipesPage();
+}
+
 function renderCategories() {
   const cats = ["Breakfast", "Appetizers", "Salads", "Soups", "Pasta", "Side Dishes", "Bread", 
                 "Main Dishes", "Desserts", "Beverages", "Specialty Items"];
@@ -244,9 +451,11 @@ function renderCategories() {
 
 function renderRecipeGrid(list) {
   document.getElementById('recipeGrid').innerHTML = list.map(r => `
-    <div class="bg-white p-6 rounded-3xl shadow cursor-pointer">
-      <h3 class="text-2xl">${r.title}</h3>
-      <p class="text-amber-800">${r.category}</p>
+    <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer border border-amber-900">
+      <img src="${r.images[0]}" class="w-full h-56 object-cover">
+      <div class="p-6">
+        <h3 class="text-2xl font-serif">${r.title}</h3>
+      </div>
     </div>
   `).join('');
 }
@@ -255,7 +464,7 @@ function renderFavorites() {
   const favorites = recipes.filter(r => r.favorite).sort((a,b) => b.id - a.id);
   const container = document.getElementById('favoritesGrid');
   container.innerHTML = favorites.length ? favorites.map(r => `
-    <div class="bg-white p-6 rounded-3xl shadow">
+    <div onclick="openRecipe(${r.id})" class="bg-white p-6 rounded-3xl shadow cursor-pointer">
       <h3 class="text-2xl">${r.title}</h3>
       <p class="text-amber-800">${r.category}</p>
     </div>
@@ -269,7 +478,10 @@ function filterByCategory(cat) {
 
 function filterRecipes() {
   const term = document.getElementById('searchInput').value.toLowerCase();
-  const filtered = recipes.filter(r => r.title.toLowerCase().includes(term));
+  const filtered = recipes.filter(r => 
+    r.title.toLowerCase().includes(term) || 
+    (r.tags && r.tags.some(tag => tag.includes(term)))
+  );
   renderRecipeGrid(filtered);
 }
 
