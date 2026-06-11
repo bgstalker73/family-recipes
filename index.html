@@ -7,85 +7,77 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
   <style>
-    body { font-family: 'Georgia', serif; background: #f9f5eb; }
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@400;500;600&display=swap');
+    
+    body { font-family: 'Poppins', sans-serif; background: #fffaf0; }
+    .serif { font-family: 'Playfair Display', serif; }
+
     .hero { 
-      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+      background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), 
                   url('IMG_9206.JPEG') center/cover no-repeat fixed;
       min-height: 100vh;
     }
-    .heart { cursor: pointer; font-size: 2.2rem; transition: all 0.2s; }
-    .heart:hover { transform: scale(1.3); }
-    .recipe-card { transition: all 0.3s; cursor: pointer; }
-    .recipe-card:hover { transform: scale(1.04); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15); }
-    .drop-zone { border: 3px dashed #d97706; }
 
-    /* Full-screen image viewer */
-    #imageViewer {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.95);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
+    .recipe-card { 
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
     }
-    #viewerImage {
-      max-width: 100%;
-      max-height: 95vh;
-      object-fit: contain;
-      border-radius: 12px;
+    .recipe-card:hover { 
+      transform: translateY(-12px) scale(1.04); 
+      box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25); 
     }
+
+    .heart { cursor: pointer; font-size: 2.4rem; transition: all 0.3s; }
+    .heart:hover { transform: scale(1.4) rotate(12deg); }
   </style>
 </head>
 <body class="min-h-screen pb-20">
 
-<nav class="bg-amber-900 text-white py-4 sticky top-0 z-50 shadow-md">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 flex justify-start items-center gap-4 sm:gap-8">
-    <h1 class="text-2xl sm:text-3xl font-bold italic">Keely & Brian's</h1>
-    <div class="flex flex-wrap gap-3 sm:gap-6 text-base sm:text-lg">
-      <button onclick="showHome()" class="hover:text-amber-300 whitespace-nowrap">Home</button>
-      <button onclick="showRecipesPage()" class="hover:text-amber-300 whitespace-nowrap">Recipes</button>
-      <button onclick="showFavoritesPage()" class="hover:text-amber-300 whitespace-nowrap">Favs ❤️</button>
-      <button onclick="showAddForm()" class="hover:text-amber-300 font-medium whitespace-nowrap">+ Add Recipe</button>
+<!-- Top Ribbon - Changed to F9CDDF -->
+<nav class="bg-[#F9CDDF] text-pink-900 py-5 sticky top-0 z-50 shadow-xl">
+  <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+    <h1 class="text-3xl font-bold serif">Keely & Brian's</h1>
+    <div class="flex flex-wrap gap-6 text-lg font-medium">
+      <button onclick="showHome()" class="hover:text-pink-700">Home</button>
+      <button onclick="showRecipesPage()" class="hover:text-pink-700">Recipes</button>
+      <button onclick="showFavoritesPage()" class="hover:text-pink-700">Favs ❤️</button>
+      <button onclick="showAddForm()" class="hover:text-pink-700 font-semibold">+ Add Recipe</button>
     </div>
   </div>
 </nav>
 
-<!-- HOME -->
+<!-- HOME - Removed large Family Favorites button -->
 <div id="home" class="hero flex items-center justify-center text-center text-white">
   <div class="max-w-4xl px-6">
-    <h1 class="text-5xl md:text-7xl font-serif italic tracking-wider mb-6">Keely & Brian's<br>Family Recipes</h1>
-    <p class="text-2xl md:text-3xl mb-12">Love. Tradition. Flavor.</p>
-    <button onclick="showFavoritesPage()" class="bg-amber-700 hover:bg-amber-600 text-xl px-10 py-5 rounded-full">Family Favorites ❤️</button>
+    <h1 class="text-6xl md:text-8xl serif italic tracking-wider mb-6">Keely & Brian's<br>Family Recipes</h1>
+    <p class="text-3xl mb-12">Love. Tradition. Flavor.</p>
   </div>
 </div>
 
 <!-- FAMILY FAVORITES -->
-<div id="favoritesPage" class="max-w-6xl mx-auto px-4 sm:px-6 py-8 hidden">
-  <h2 class="text-4xl font-serif mb-6">Most Recent Family Favorites ❤️</h2>
+<div id="favoritesPage" class="max-w-6xl mx-auto px-6 py-12 hidden">
+  <h2 class="text-5xl serif mb-8 flex items-center gap-4">❤️ Most Loved Family Favorites</h2>
   <div id="favoritesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 </div>
 
 <!-- RECIPES PAGE -->
-<div id="recipesPage" class="max-w-6xl mx-auto px-4 sm:px-6 py-8 hidden">
-  <input id="searchInput" type="text" placeholder="Search recipes or tags..." 
-         class="w-full text-xl sm:text-2xl py-5 px-6 rounded-3xl border-4 border-amber-900 mb-8" onkeyup="filterRecipes()">
-  <h2 class="text-4xl font-serif mb-6">Categories</h2>
-  <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-  <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10"></div>
+<div id="recipesPage" class="max-w-6xl mx-auto px-6 py-12 hidden">
+  <input id="searchInput" type="text" placeholder="🔍 Search recipes or tags..." 
+         class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-pink-900 mb-10" onkeyup="filterRecipes()">
+  <h2 class="text-5xl serif mb-8">Our Recipe Collection</h2>
+  <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
+  <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12"></div>
 </div>
 
 <!-- ADD RECIPE PAGE -->
-<div id="addForm" class="max-w-2xl mx-auto px-4 sm:px-6 py-8 hidden">
-  <h2 class="text-4xl font-serif mb-8">Add a New Family Recipe</h2>
-  <div class="bg-white p-8 rounded-3xl shadow">
-    <div class="flex items-center gap-3 mb-6">
+<div id="addForm" class="max-w-2xl mx-auto px-6 py-12 hidden">
+  <h2 class="text-5xl serif mb-10 text-center">Add a New Family Treasure 🍲</h2>
+  <div class="bg-white p-10 rounded-3xl shadow-2xl">
+    <div class="flex items-center gap-4 mb-8">
       <button onclick="toggleFavoriteInAdd()" id="addHeart" class="heart text-red-500">♡</button>
-      <input id="newTitle" placeholder="Recipe Title *" class="flex-1 p-4 border rounded-2xl text-xl">
+      <input id="newTitle" placeholder="Recipe Title *" class="flex-1 p-5 border-2 border-pink-300 rounded-3xl text-xl">
     </div>
 
-    <select id="newCategory" class="w-full mb-6 p-4 border rounded-2xl text-lg">
+    <select id="newCategory" class="w-full mb-8 p-5 border-2 border-pink-300 rounded-3xl text-lg">
       <option value="">Select Category</option>
       <option value="Main Dishes">Main Dishes</option>
       <option value="Side Dishes">Side Dishes</option>
@@ -100,76 +92,71 @@
       <option value="Specialty Items">Specialty Items</option>
     </select>
 
-    <input id="newTags" placeholder="Tags (comma separated)" class="w-full p-4 border rounded-2xl mb-8 text-lg">
+    <input id="newTags" placeholder="Tags (comma separated)" class="w-full p-5 border-2 border-pink-300 rounded-3xl mb-8 text-lg">
 
-    <div class="mb-8 p-6 border-2 border-dashed border-amber-700 rounded-3xl">
-      <label class="block text-lg mb-4 font-medium">📸 Scan Recipe Document</label>
-      <div class="grid grid-cols-2 gap-4">
-        <!-- CHANGED: Camera button label for document scanning -->
-        <button onclick="openCamera()" class="bg-amber-700 hover:bg-amber-600 text-white py-6 rounded-2xl flex flex-col items-center gap-2">
-          <i class="fas fa-camera text-3xl"></i><span>Scan Document</span>
+    <div class="mb-10 p-8 border-2 border-dashed border-pink-700 rounded-3xl bg-pink-50">
+      <label class="block text-xl mb-4 font-medium">📸 Scan Recipe Card</label>
+      <p class="text-sm text-pink-800 mb-6 text-center">Best for 8x11 or 3x5 cards • Plain background recommended</p>
+      
+      <div class="grid grid-cols-2 gap-6">
+        <button onclick="openCamera()" class="bg-gradient-to-br from-pink-600 to-rose-600 text-white py-8 rounded-3xl flex flex-col items-center gap-3 hover:brightness-110 transition">
+          <i class="fas fa-camera text-4xl"></i>
+          <span class="font-semibold">Scan Recipe Card</span>
         </button>
-        <div id="dropZone" class="drop-zone p-6 text-center rounded-2xl cursor-pointer flex flex-col justify-center">
-          <i class="fas fa-cloud-upload-alt text-3xl text-amber-700"></i>
-          <span class="mt-2">Upload Photo</span>
+        <div id="dropZone" class="drop-zone p-8 text-center rounded-3xl cursor-pointer flex flex-col justify-center border-2 border-dashed border-pink-700 hover:bg-pink-100 transition">
+          <i class="fas fa-cloud-upload-alt text-4xl text-pink-700"></i>
+          <span class="mt-3 font-medium">Upload Image</span>
           <input type="file" id="imageUpload" accept="image/*" class="hidden">
         </div>
       </div>
-      <div id="previewImages" class="flex flex-wrap gap-3 mt-6"></div>
+      <div id="previewImages" class="flex flex-wrap gap-4 mt-8"></div>
     </div>
 
-    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-40 p-4 border rounded-2xl mb-6"></textarea>
-    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-40 p-4 border rounded-2xl mb-8"></textarea>
+    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-48 p-6 border-2 border-pink-300 rounded-3xl mb-8"></textarea>
+    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-48 p-6 border-2 border-pink-300 rounded-3xl mb-10"></textarea>
 
-    <button onclick="addNewRecipe()" class="w-full bg-amber-900 hover:bg-amber-800 text-white py-6 text-xl rounded-3xl font-bold">
-      ADD RECIPE TO COOKBOOK
+    <button onclick="addNewRecipe()" class="w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-7 text-2xl rounded-3xl font-bold">
+      🍳 ADD TO FAMILY COOKBOOK
     </button>
   </div>
 </div>
 
 <!-- SINGLE RECIPE PAGE -->
-<div id="singleRecipePage" class="max-w-4xl mx-auto px-4 sm:px-6 py-8 hidden">
-  <button onclick="closeSingleRecipe()" class="mb-6 text-2xl hover:text-amber-700 flex items-center gap-2">← Back to Recipes</button>
+<div id="singleRecipePage" class="max-w-4xl mx-auto px-6 py-12 hidden">
+  <button onclick="closeSingleRecipe()" class="mb-8 text-2xl hover:text-pink-700 flex items-center gap-3">← Back to Recipes</button>
   
-  <div class="bg-white rounded-3xl shadow overflow-hidden">
-    <div class="relative bg-gray-100">
-      <img id="singleRecipeMainImage" class="w-full h-80 sm:h-96 object-cover cursor-pointer" onclick="showImageViewer(this.src)">
-    </div>
+  <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+    <img id="singleRecipeMainImage" class="w-full h-96 object-cover cursor-pointer" onclick="showImageViewer(this.src)">
     
-    <div class="p-8">
-      <div class="flex items-center gap-4 mb-4">
-        <h2 id="singleRecipeTitle" class="text-4xl font-serif flex-1"></h2>
+    <div class="p-10">
+      <div class="flex items-center gap-4 mb-6">
+        <h2 id="singleRecipeTitle" class="text-5xl serif flex-1"></h2>
         <button onclick="toggleFavoriteInSingle()" id="singleHeart" class="heart text-red-500">♡</button>
       </div>
-      <div id="singleRecipeTags" class="text-amber-700 mb-6"></div>
+      <div id="singleRecipeTags" class="text-pink-700 mb-8"></div>
 
-      <div class="grid md:grid-cols-2 gap-10">
+      <div class="grid md:grid-cols-2 gap-12">
         <div>
-          <h3 class="text-2xl mb-4">Ingredients</h3>
-          <div id="singleIngredientsList" class="space-y-3"></div>
+          <h3 class="text-3xl serif mb-6">🥕 Ingredients</h3>
+          <div id="singleIngredientsList" class="space-y-4 text-lg"></div>
         </div>
         <div>
-          <h3 class="text-2xl mb-4">Instructions</h3>
-          <div id="singleInstructionsList" class="space-y-4 text-lg"></div>
+          <h3 class="text-3xl serif mb-6">👩‍🍳 Instructions</h3>
+          <div id="singleInstructionsList" class="space-y-6 text-lg"></div>
         </div>
       </div>
 
-      <div class="mt-12">
-        <h3 class="text-2xl mb-3">Family Notes & Memories</h3>
-        <textarea id="singleNotesArea" class="w-full h-32 p-5 border-2 border-amber-200 rounded-2xl"></textarea>
-        <button onclick="saveNotes()" class="mt-3 bg-amber-700 text-white px-8 py-3 rounded-xl">Save Notes</button>
+      <div class="mt-16">
+        <h3 class="text-3xl serif mb-4">Family Notes & Memories</h3>
+        <textarea id="singleNotesArea" class="w-full h-40 p-6 border-2 border-pink-200 rounded-3xl"></textarea>
+        <button onclick="saveNotes()" class="mt-4 bg-pink-700 text-white px-10 py-4 rounded-2xl">Save Notes</button>
       </div>
 
-      <button onclick="printIngredientsAndInstructions()" class="mt-6 w-full bg-amber-800 hover:bg-amber-700 text-white py-4 rounded-2xl">
-        🖨️ Print Ingredients & Instructions
-      </button>
-      <button onclick="printOriginalRecipe()" class="mt-4 w-full bg-amber-900 text-white py-6 text-xl rounded-3xl">
-        🖨️ Print Original Recipe (with uploaded image)
-      </button>
-
-      <button onclick="deleteCurrentRecipeFromSingle()" class="mt-4 w-full bg-red-700 hover:bg-red-600 text-white py-4 rounded-2xl text-lg">
-        🗑️ Delete This Recipe
-      </button>
+      <div class="grid grid-cols-1 gap-4 mt-12">
+        <button onclick="printIngredientsAndInstructions()" class="w-full bg-pink-800 hover:bg-pink-700 text-white py-5 rounded-3xl text-xl">🖨️ Print Ingredients & Instructions</button>
+        <button onclick="printOriginalRecipe()" class="w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-7 rounded-3xl text-2xl font-bold">🖨️ Print Full Recipe with Photo</button>
+        <button onclick="deleteCurrentRecipeFromSingle()" class="w-full bg-red-700 hover:bg-red-600 text-white py-5 rounded-3xl text-xl">🗑️ Delete This Recipe</button>
+      </div>
     </div>
   </div>
 </div>
@@ -177,10 +164,8 @@
 <!-- Full-screen Image Viewer -->
 <div id="imageViewer">
   <div class="relative max-w-full">
-    <button onclick="closeImageViewer()" class="absolute -top-10 right-4 text-white text-2xl hover:text-amber-300 flex items-center gap-2">
-      ✕ Close
-    </button>
-    <img id="viewerImage" src="" alt="Recipe Image">
+    <button onclick="closeImageViewer()" class="absolute -top-12 right-6 text-white text-3xl hover:text-pink-300">✕ Close</button>
+    <img id="viewerImage" src="" alt="Recipe Image" class="max-h-[90vh] rounded-2xl shadow-2xl">
   </div>
 </div>
 
@@ -190,7 +175,6 @@ let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
 let newRecipeImages = [];
 let currentRecipe = null;
 
-// Default images
 const categoryImages = {
   "Breakfast": "https://picsum.photos/id/1080/800/600",
   "Appetizers": "https://picsum.photos/id/292/800/600",
@@ -281,7 +265,7 @@ function renderPreviewImages() {
   if (!container) return;
   container.innerHTML = newRecipeImages.map((src, i) => `
     <div class="relative inline-block">
-      <img src="${src}" class="w-24 h-24 object-cover rounded-xl cursor-pointer" onclick="showImageViewer('${src}')">
+      <img src="${src}" class="w-28 h-28 object-cover rounded-xl cursor-pointer" onclick="showImageViewer('${src}')">
       <button onclick="removePreviewImage(${i}); event.stopImmediatePropagation()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs">×</button>
     </div>
   `).join('');
@@ -301,7 +285,7 @@ function closeImageViewer() {
   document.getElementById('imageViewer').style.display = 'none';
 }
 
-// ADD RECIPE - CHANGED: Now opens the new recipe page
+// Add Recipe
 function addNewRecipe() {
   const title = document.getElementById('newTitle').value.trim();
   if (!title) return alert("Please enter a recipe title!");
@@ -321,10 +305,7 @@ function addNewRecipe() {
 
   recipes.unshift(newRecipe);
   saveRecipes();
-
-  alert(`✅ "${title}" has been added to your cookbook!`);
-
-  // NEW: Open the newly added recipe page
+  alert(`✅ "${title}" has been added!`);
   openRecipe(newRecipe.id);
 }
 
@@ -398,7 +379,7 @@ function renderCategories() {
   const cats = ["Main Dishes", "Side Dishes", "Appetizers", "Soups", "Bread", 
                 "Desserts", "Salads", "Pasta", "Beverages", "Breakfast", "Specialty Items"];
   document.getElementById('categories').innerHTML = cats.map(cat => `
-    <div onclick="filterByCategory('${cat}')" class="bg-white p-4 rounded-3xl text-center cursor-pointer hover:bg-amber-50 border border-amber-900">
+    <div onclick="filterByCategory('${cat}')" class="bg-white p-6 rounded-3xl text-center cursor-pointer hover:bg-pink-50 border border-pink-900">
       <h3 class="text-xl">${cat}</h3>
     </div>
   `).join('');
@@ -408,7 +389,7 @@ function renderRecipeGrid(list) {
   document.getElementById('recipeGrid').innerHTML = list.map(r => {
     const imgSrc = r.images && r.images[0] ? r.images[0] : getDefaultImage(r.category);
     return `
-      <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer border border-amber-900">
+      <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer">
         <img src="${imgSrc}" class="w-full h-56 object-cover">
         <div class="p-6">
           <h3 class="text-2xl font-serif">${r.title}</h3>
@@ -427,7 +408,7 @@ function renderFavorites() {
       <div onclick="openRecipe(${r.id})" class="bg-white p-6 rounded-3xl shadow cursor-pointer">
         <img src="${imgSrc}" class="w-full h-48 object-cover rounded-2xl mb-4">
         <h3 class="text-2xl">${r.title}</h3>
-        <p class="text-amber-800">${r.category}</p>
+        <p class="text-pink-800">${r.category}</p>
       </div>
     `;
   }).join('') : '<p class="text-center text-xl py-12 text-gray-500">No favorites yet. ❤️ a recipe when adding it!</p>';
