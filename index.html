@@ -28,24 +28,51 @@
 
     .heart { cursor: pointer; font-size: 2.4rem; transition: all 0.3s; }
     .heart:hover { transform: scale(1.4) rotate(12deg); }
+
+    /* CHANGED: Top nav buttons - 33% bigger + bold */
+    .nav-button {
+      font-size: 1.43rem;
+      font-weight: 700;
+      padding: 6px 16px;
+      transition: all 0.2s;
+    }
+    .nav-button:hover {
+      color: #9f1239;
+      transform: translateY(-1px);
+    }
+
+    /* Consistent form fields */
+    .form-input {
+      width: 100%;
+      padding: 1.25rem;
+      border: 2px solid #f9a8d4;
+      border-radius: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    /* CHANGED: Category buttons reduced by ~50% */
+    .category-btn {
+      padding: 1rem 1.25rem;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+    }
   </style>
 </head>
 <body class="min-h-screen pb-20">
 
-<!-- Top Ribbon - Changed to F9CDDF -->
 <nav class="bg-[#F9CDDF] text-pink-900 py-5 sticky top-0 z-50 shadow-xl">
   <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
     <h1 class="text-3xl font-bold serif">Keely & Brian's</h1>
     <div class="flex flex-wrap gap-6 text-lg font-medium">
-      <button onclick="showHome()" class="hover:text-pink-700">Home</button>
-      <button onclick="showRecipesPage()" class="hover:text-pink-700">Recipes</button>
-      <button onclick="showFavoritesPage()" class="hover:text-pink-700">Favs ❤️</button>
-      <button onclick="showAddForm()" class="hover:text-pink-700 font-semibold">+ Add Recipe</button>
+      <button onclick="showHome()" class="nav-button">Home</button>
+      <button onclick="showRecipesPage()" class="nav-button">Recipes</button>
+      <button onclick="showFavoritesPage()" class="nav-button">Favs ❤️</button>
+      <button onclick="showAddForm()" class="nav-button">+ Add Recipe</button>
     </div>
   </div>
 </nav>
 
-<!-- HOME - Removed large Family Favorites button -->
+<!-- HOME -->
 <div id="home" class="hero flex items-center justify-center text-center text-white">
   <div class="max-w-4xl px-6">
     <h1 class="text-6xl md:text-8xl serif italic tracking-wider mb-6">Keely & Brian's<br>Family Recipes</h1>
@@ -72,12 +99,10 @@
 <div id="addForm" class="max-w-2xl mx-auto px-6 py-12 hidden">
   <h2 class="text-5xl serif mb-10 text-center">Add a New Family Treasure 🍲</h2>
   <div class="bg-white p-10 rounded-3xl shadow-2xl">
-    <div class="flex items-center gap-4 mb-8">
-      <button onclick="toggleFavoriteInAdd()" id="addHeart" class="heart text-red-500">♡</button>
-      <input id="newTitle" placeholder="Recipe Title *" class="flex-1 p-5 border-2 border-pink-300 rounded-3xl text-xl">
-    </div>
+    <input id="newTitle" placeholder="Recipe Title *" 
+           class="form-input mb-8 text-center">
 
-    <select id="newCategory" class="w-full mb-8 p-5 border-2 border-pink-300 rounded-3xl text-lg">
+    <select id="newCategory" class="form-input mb-8">
       <option value="">Select Category</option>
       <option value="Main Dishes">Main Dishes</option>
       <option value="Side Dishes">Side Dishes</option>
@@ -89,10 +114,11 @@
       <option value="Pasta">Pasta</option>
       <option value="Beverages">Beverages</option>
       <option value="Breakfast">Breakfast</option>
+      <option value="Sauces & Spices">Sauces & Spices</option>
       <option value="Specialty Items">Specialty Items</option>
     </select>
 
-    <input id="newTags" placeholder="Tags (comma separated)" class="w-full p-5 border-2 border-pink-300 rounded-3xl mb-8 text-lg">
+    <input id="newTags" placeholder="Tags (comma separated)" class="form-input mb-8">
 
     <div class="mb-10 p-8 border-2 border-dashed border-pink-700 rounded-3xl bg-pink-50">
       <label class="block text-xl mb-4 font-medium">📸 Scan Recipe Card</label>
@@ -112,8 +138,13 @@
       <div id="previewImages" class="flex flex-wrap gap-4 mt-8"></div>
     </div>
 
-    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="w-full h-48 p-6 border-2 border-pink-300 rounded-3xl mb-8"></textarea>
-    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="w-full h-48 p-6 border-2 border-pink-300 rounded-3xl mb-10"></textarea>
+    <textarea id="newIngredients" placeholder="Ingredients (one per line)" class="form-input h-48 mb-8"></textarea>
+    <textarea id="newInstructions" placeholder="Instructions (one step per line)" class="form-input h-48 mb-10"></textarea>
+
+    <div class="flex items-center justify-center gap-4 mb-8">
+      <button onclick="toggleFavoriteInAdd()" id="addHeart" class="heart text-red-500 text-5xl">♡</button>
+      <span class="text-xl font-medium text-pink-900">Favorite</span>
+    </div>
 
     <button onclick="addNewRecipe()" class="w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-7 text-2xl rounded-3xl font-bold">
       🍳 ADD TO FAMILY COOKBOOK
@@ -162,15 +193,15 @@
 </div>
 
 <!-- Full-screen Image Viewer -->
-<div id="imageViewer">
-  <div class="relative max-w-full">
-    <button onclick="closeImageViewer()" class="absolute -top-12 right-6 text-white text-3xl hover:text-pink-300">✕ Close</button>
-    <img id="viewerImage" src="" alt="Recipe Image" class="max-h-[90vh] rounded-2xl shadow-2xl">
+<div id="imageViewer" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4">
+  <div class="relative max-w-4xl w-full">
+    <button onclick="closeImageViewer()" class="absolute -top-14 right-4 text-white text-4xl hover:text-pink-300">✕</button>
+    <img id="viewerImage" src="" alt="Recipe Image" class="max-h-[85vh] w-full object-contain rounded-2xl">
   </div>
 </div>
 
 <script>
-// Data
+// ==================== DATA & CORE FUNCTIONS ====================
 let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
 let newRecipeImages = [];
 let currentRecipe = null;
@@ -186,6 +217,7 @@ const categoryImages = {
   "Main Dishes": "https://picsum.photos/id/1060/800/600",
   "Desserts": "https://picsum.photos/id/1083/800/600",
   "Beverages": "https://picsum.photos/id/133/800/600",
+  "Sauces & Spices": "https://picsum.photos/id/292/800/600",
   "Specialty Items": "https://picsum.photos/id/292/800/600"
 };
 
@@ -197,19 +229,25 @@ function saveRecipes() {
   localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
 }
 
-// Navigation
-function showHome() { hideAll(); document.getElementById('home').style.display = 'flex'; }
+// ==================== NAVIGATION ====================
+function showHome() { 
+  hideAll(); 
+  document.getElementById('home').style.display = 'flex'; 
+}
+
 function showRecipesPage() { 
   hideAll(); 
   document.getElementById('recipesPage').classList.remove('hidden'); 
   renderRecipeGrid(recipes); 
   renderCategories();
 }
+
 function showFavoritesPage() { 
   hideAll(); 
   document.getElementById('favoritesPage').classList.remove('hidden'); 
   renderFavorites(); 
 }
+
 function showAddForm() { 
   hideAll(); 
   newRecipeImages = []; 
@@ -231,7 +269,7 @@ function hideAll() {
   document.getElementById('singleRecipePage').classList.add('hidden');
 }
 
-// Image handling
+// ==================== IMAGE HANDLING ====================
 function openCamera() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -285,7 +323,13 @@ function closeImageViewer() {
   document.getElementById('imageViewer').style.display = 'none';
 }
 
-// Add Recipe
+// ==================== FAVORITE TOGGLE ====================
+function toggleFavoriteInAdd() {
+  const heart = document.getElementById('addHeart');
+  heart.innerHTML = heart.innerHTML === '♡' ? '❤️' : '♡';
+}
+
+// ==================== ADD RECIPE ====================
 function addNewRecipe() {
   const title = document.getElementById('newTitle').value.trim();
   if (!title) return alert("Please enter a recipe title!");
@@ -305,11 +349,38 @@ function addNewRecipe() {
 
   recipes.unshift(newRecipe);
   saveRecipes();
-  alert(`✅ "${title}" has been added!`);
-  openRecipe(newRecipe.id);
+
+  showAddSuccess(title);
+  setTimeout(() => openRecipe(newRecipe.id), 1700);
 }
 
-// SINGLE RECIPE PAGE
+function showAddSuccess(title) {
+  const bubble = document.createElement('div');
+  bubble.style.position = 'fixed';
+  bubble.style.top = '40%';
+  bubble.style.left = '50%';
+  bubble.style.transform = 'translate(-50%, -50%)';
+  bubble.style.background = 'white';
+  bubble.style.padding = '25px 35px';
+  bubble.style.borderRadius = '9999px';
+  bubble.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
+  bubble.style.zIndex = '10000';
+  bubble.style.display = 'flex';
+  bubble.style.alignItems = 'center';
+  bubble.style.gap = '15px';
+  bubble.style.border = '3px solid #ec4899';
+  bubble.innerHTML = `<span class="text-5xl">👨‍🍳</span><span class="text-xl font-medium">Added "${title}" successfully!</span>`;
+  document.body.appendChild(bubble);
+
+  setTimeout(() => {
+    bubble.style.transition = 'all 0.6s ease';
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'translate(-50%, -80%)';
+    setTimeout(() => bubble.remove(), 700);
+  }, 1600);
+}
+
+// ==================== SINGLE RECIPE PAGE ====================
 function openRecipe(id) {
   currentRecipe = recipes.find(r => r.id === id);
   if (!currentRecipe) return alert("Recipe not found");
@@ -318,7 +389,7 @@ function openRecipe(id) {
   document.getElementById('singleRecipeTags').innerHTML = currentRecipe.tags && currentRecipe.tags.length ? 
     `Tags: ${currentRecipe.tags.join(', ')}` : '';
 
-  const imgSrc = currentRecipe.images && currentRecipe.images[0] ? currentRecipe.images[0] : getDefaultImage(currentRecipe.category);
+  const imgSrc = currentRecipe.images && currentRecipe.images.length > 0 ? currentRecipe.images[0] : getDefaultImage(currentRecipe.category);
   document.getElementById('singleRecipeMainImage').src = imgSrc;
 
   document.getElementById('singleIngredientsList').innerHTML = currentRecipe.ingredients.map(i => `<div class="text-lg">• ${i}</div>`).join('');
@@ -349,7 +420,6 @@ function deleteCurrentRecipeFromSingle() {
   closeSingleRecipe();
 }
 
-// Print functions
 function printIngredientsAndInstructions() {
   if (!currentRecipe) return;
   const win = window.open('', '', 'height=700,width=600');
@@ -374,12 +444,13 @@ function printOriginalRecipe() {
   win.print();
 }
 
-// Render functions
+// ==================== RENDER FUNCTIONS ====================
 function renderCategories() {
   const cats = ["Main Dishes", "Side Dishes", "Appetizers", "Soups", "Bread", 
-                "Desserts", "Salads", "Pasta", "Beverages", "Breakfast", "Specialty Items"];
+                "Desserts", "Salads", "Pasta", "Beverages", "Breakfast", 
+                "Sauces & Spices", "Specialty Items"];
   document.getElementById('categories').innerHTML = cats.map(cat => `
-    <div onclick="filterByCategory('${cat}')" class="bg-white p-6 rounded-3xl text-center cursor-pointer hover:bg-pink-50 border border-pink-900">
+    <div onclick="filterByCategory('${cat}')" class="category-btn bg-white rounded-3xl text-center cursor-pointer hover:bg-pink-50 border border-pink-900">
       <h3 class="text-xl">${cat}</h3>
     </div>
   `).join('');
@@ -389,7 +460,7 @@ function renderRecipeGrid(list) {
   document.getElementById('recipeGrid').innerHTML = list.map(r => {
     const imgSrc = r.images && r.images[0] ? r.images[0] : getDefaultImage(r.category);
     return `
-      <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer">
+      <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer border border-pink-200">
         <img src="${imgSrc}" class="w-full h-56 object-cover">
         <div class="p-6">
           <h3 class="text-2xl font-serif">${r.title}</h3>
