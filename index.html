@@ -48,7 +48,6 @@
       font-size: 1.1rem;
     }
 
-    /* Mobile ribbon buttons */
     @media (max-width: 640px) {
       .nav-button {
         font-size: 0.95rem !important;
@@ -80,13 +79,13 @@
   </div>
 </div>
 
-<!-- FAMILY FAVORITES -->
+<!-- FAVORITES -->
 <div id="favoritesPage" class="max-w-6xl mx-auto px-6 py-12 hidden">
   <h2 class="text-5xl serif mb-8 flex items-center gap-4">❤️ Most Loved Family Favorites</h2>
   <div id="favoritesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
 </div>
 
-<!-- RECIPES PAGE -->
+<!-- RECIPES -->
 <div id="recipesPage" class="max-w-6xl mx-auto px-6 py-12 hidden">
   <input id="searchInput" type="text" placeholder="🔍 Search recipes or tags..." 
          class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-pink-900 mb-10" onkeyup="filterRecipes()">
@@ -95,12 +94,11 @@
   <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12"></div>
 </div>
 
-<!-- ADD RECIPE PAGE -->
+<!-- ADD RECIPE -->
 <div id="addForm" class="max-w-2xl mx-auto px-6 py-12 hidden">
   <h2 class="text-5xl serif mb-10 text-center">Add a New Family Treasure 🍲</h2>
   <div class="bg-white p-10 rounded-3xl shadow-2xl">
     <input id="newTitle" placeholder="Recipe Title *" class="form-input mb-8 text-center">
-
     <select id="newCategory" class="form-input mb-8">
       <option value="">Select Category</option>
       <option value="Main Dishes">Main Dishes</option>
@@ -116,13 +114,11 @@
       <option value="Sauces & Spices">Sauces & Spices</option>
       <option value="Specialty Items">Specialty Items</option>
     </select>
-
     <input id="newTags" placeholder="Tags (comma separated)" class="form-input mb-8">
 
     <div class="mb-10 p-8 border-2 border-dashed border-pink-700 rounded-3xl bg-pink-50">
       <label class="block text-xl mb-4 font-medium">📸 Scan Recipe Card</label>
       <p class="text-sm text-pink-800 mb-6 text-center">Best for 8x11 or 3x5 cards • Plain background recommended</p>
-      
       <div class="grid grid-cols-2 gap-6">
         <button onclick="openCamera()" class="bg-gradient-to-br from-pink-600 to-rose-600 text-white py-8 rounded-3xl flex flex-col items-center gap-3 hover:brightness-110 transition">
           <i class="fas fa-camera text-4xl"></i>
@@ -152,13 +148,11 @@
   </div>
 </div>
 
-<!-- SINGLE RECIPE PAGE -->
+<!-- SINGLE RECIPE -->
 <div id="singleRecipePage" class="max-w-4xl mx-auto px-6 py-12 hidden">
   <button onclick="closeSingleRecipe()" class="mb-8 text-2xl hover:text-pink-700 flex items-center gap-3">← Back to Recipes</button>
-  
   <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
     <img id="singleRecipeMainImage" class="w-full h-96 object-cover cursor-pointer" onclick="showImageViewer(this.src)">
-    
     <div class="p-10">
       <div class="flex items-center gap-4 mb-6">
         <h2 id="singleRecipeTitle" class="text-5xl serif flex-1"></h2>
@@ -206,13 +200,12 @@
 </div>
 
 <script>
-// ==================== DATA & CORE FUNCTIONS ====================
 let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
 let newRecipeImages = [];
 let currentRecipe = null;
-let isAdding = false;                    // ← NEW: prevent double submit
+let isAdding = false;
 
-const categoryImages = { /* ... same as before ... */
+const categoryImages = {
   "Breakfast": "https://picsum.photos/id/1080/800/600",
   "Appetizers": "https://picsum.photos/id/292/800/600",
   "Salads": "https://picsum.photos/id/431/800/600",
@@ -235,24 +228,11 @@ function saveRecipes() {
   localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
 }
 
-// ==================== NAVIGATION ====================
+// Navigation
 function showHome() { hideAll(); document.getElementById('home').style.display = 'flex'; }
-function showRecipesPage() { 
-  hideAll(); 
-  document.getElementById('recipesPage').classList.remove('hidden'); 
-  renderRecipeGrid(recipes); 
-  renderCategories();
-}
-function showFavoritesPage() { 
-  hideAll(); 
-  document.getElementById('favoritesPage').classList.remove('hidden'); 
-  renderFavorites(); 
-}
-function showAddForm() { 
-  hideAll(); 
-  resetAddForm();
-  document.getElementById('addForm').classList.remove('hidden'); 
-}
+function showRecipesPage() { hideAll(); document.getElementById('recipesPage').classList.remove('hidden'); renderRecipeGrid(recipes); renderCategories(); }
+function showFavoritesPage() { hideAll(); document.getElementById('favoritesPage').classList.remove('hidden'); renderFavorites(); }
+function showAddForm() { hideAll(); resetAddForm(); document.getElementById('addForm').classList.remove('hidden'); }
 
 function hideAll() {
   document.getElementById('home').style.display = 'none';
@@ -271,11 +251,12 @@ function resetAddForm() {
   document.getElementById('newIngredients').value = '';
   document.getElementById('newInstructions').value = '';
   document.getElementById('addHeart').innerHTML = '♡';
-  document.getElementById('addRecipeBtn').disabled = false;
-  document.getElementById('addRecipeBtn').innerHTML = '🍳 ADD TO FAMILY COOKBOOK';
+  const btn = document.getElementById('addRecipeBtn');
+  btn.disabled = false;
+  btn.innerHTML = '🍳 ADD TO FAMILY COOKBOOK';
 }
 
-// ==================== ADD RECIPE (FIXED) ====================
+// Add Recipe (Fixed)
 function addNewRecipe() {
   if (isAdding) return;
   isAdding = true;
@@ -288,6 +269,7 @@ function addNewRecipe() {
   if (!title) {
     alert("Please enter a recipe title!");
     resetButton();
+    isAdding = false;
     return;
   }
 
@@ -300,21 +282,19 @@ function addNewRecipe() {
     tags: document.getElementById('newTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
     ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
     instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
-    images: newRecipeImages.length ? newRecipeImages : [getDefaultImage(category)],
+    images: newRecipeImages.length ? [...newRecipeImages] : [getDefaultImage(category)],
     favorite: document.getElementById('addHeart').innerHTML === '❤️'
   };
 
   recipes.unshift(newRecipe);
   saveRecipes();
-
   showAddSuccess(title);
-  
-  // Switch to the new recipe view
+
   setTimeout(() => {
     openRecipe(newRecipe.id);
     resetButton();
     isAdding = false;
-  }, 800);
+  }, 700);
 }
 
 function resetButton() {
@@ -323,23 +303,15 @@ function resetButton() {
   btn.innerHTML = '🍳 ADD TO FAMILY COOKBOOK';
 }
 
-// ==================== Rest of your script (unchanged except minor cleanups) ====================
 function showAddSuccess(title) {
   const bubble = document.createElement('div');
   bubble.style.cssText = `position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px 30px;border-radius:9999px;box-shadow:0 15px 35px rgba(0,0,0,0.3);z-index:10000;display:flex;align-items:center;gap:15px;`;
   bubble.innerHTML = `<span class="text-5xl">👨‍🍳</span><span class="text-xl font-medium">Added "${title}" successfully!</span>`;
   document.body.appendChild(bubble);
-
-  setTimeout(() => {
-    bubble.style.transition = 'all 0.6s ease';
-    bubble.style.opacity = '0';
-    bubble.style.transform = 'translate(-50%, -80%)';
-    setTimeout(() => bubble.remove(), 700);
-  }, 1600);
+  setTimeout(() => bubble.remove(), 2200);
 }
 
-// ... [All other functions remain exactly the same as in your previous version] ...
-
+// Single Recipe
 function openRecipe(id) {
   currentRecipe = recipes.find(r => r.id === id);
   if (!currentRecipe) return alert("Recipe not found");
@@ -363,7 +335,6 @@ function closeSingleRecipe() {
   showRecipesPage();
 }
 
-// Toggle favorite, delete, image handling, render functions, etc. (kept exactly as before)
 function toggleFavoriteInSingle() {
   if (!currentRecipe) return;
   currentRecipe.favorite = !currentRecipe.favorite;
@@ -380,22 +351,129 @@ function deleteCurrentRecipeFromSingle() {
   closeSingleRecipe();
 }
 
-// Image handling functions (unchanged)
-function openCamera() { /* ... same ... */ }
-function setupImageUpload() { /* ... same ... */ }
-function handleFiles(files) { /* ... same ... */ }
-function renderPreviewImages() { /* ... same ... */ }
-function removePreviewImage(i) { /* ... same ... */ }
-function showImageViewer(src) { /* ... same ... */ }
-function closeImageViewer() { /* ... same ... */ }
-function printCurrentViewerImage() { /* ... same ... */ }
+function toggleFavoriteInAdd() {
+  const heart = document.getElementById('addHeart');
+  heart.innerHTML = heart.innerHTML === '♡' ? '❤️' : '♡';
+}
 
-// Render functions
-function renderCategories() { /* ... same ... */ }
-function renderRecipeGrid(list) { /* ... same ... */ }
-function renderFavorites() { /* ... same ... */ }
-function filterByCategory(cat) { /* ... same ... */ }
-function filterRecipes() { /* ... same ... */ }
+// Image Handling
+function openCamera() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = e => handleFiles(e.target.files);
+  input.click();
+}
+
+function setupImageUpload() {
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('imageUpload');
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+}
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      newRecipeImages.push(e.target.result);
+      renderPreviewImages();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviewImages() {
+  const container = document.getElementById('previewImages');
+  container.innerHTML = newRecipeImages.map((src, i) => `
+    <div class="relative inline-block">
+      <img src="${src}" class="w-28 h-28 object-cover rounded-xl cursor-pointer" onclick="showImageViewer('${src}')">
+      <button onclick="removePreviewImage(${i}); event.stopImmediatePropagation()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs">×</button>
+    </div>
+  `).join('');
+}
+
+function removePreviewImage(i) {
+  newRecipeImages.splice(i, 1);
+  renderPreviewImages();
+}
+
+function showImageViewer(src) {
+  document.getElementById('viewerImage').src = src;
+  document.getElementById('imageViewer').style.display = 'flex';
+}
+
+function closeImageViewer() {
+  document.getElementById('imageViewer').style.display = 'none';
+}
+
+function printCurrentViewerImage() {
+  const imgSrc = document.getElementById('viewerImage').src;
+  if (!imgSrc) return;
+  const win = window.open('', '', 'height=900,width=700');
+  win.document.write(`<img src="${imgSrc}" style="max-width:100%; height:auto; display:block; margin:40px auto;">`);
+  win.document.close();
+  win.print();
+}
+
+// Render Functions
+function renderCategories() {
+  const cats = ["Main Dishes", "Side Dishes", "Appetizers", "Soups", "Bread", "Desserts", "Salads", "Pasta", "Beverages", "Breakfast", "Sauces & Spices", "Specialty Items"];
+  document.getElementById('categories').innerHTML = cats.map(cat => `
+    <div onclick="filterByCategory('${cat}')" class="bg-white p-6 rounded-3xl text-center cursor-pointer hover:bg-pink-50 border border-pink-900">
+      <h3 class="text-xl">${cat}</h3>
+    </div>
+  `).join('');
+}
+
+function renderRecipeGrid(list) {
+  document.getElementById('recipeGrid').innerHTML = list.map(r => {
+    const imgSrc = r.images && r.images[0] ? r.images[0] : getDefaultImage(r.category);
+    return `
+      <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer border border-pink-200">
+        <img src="${imgSrc}" class="w-full h-56 object-cover">
+        <div class="p-6">
+          <h3 class="text-2xl font-serif">${r.title}</h3>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderFavorites() {
+  const favorites = recipes.filter(r => r.favorite).sort((a,b) => b.id - a.id);
+  const container = document.getElementById('favoritesGrid');
+  container.innerHTML = favorites.length ? favorites.map(r => {
+    const imgSrc = r.images && r.images[0] ? r.images[0] : getDefaultImage(r.category);
+    return `
+      <div onclick="openRecipe(${r.id})" class="bg-white p-6 rounded-3xl shadow cursor-pointer">
+        <img src="${imgSrc}" class="w-full h-48 object-cover rounded-2xl mb-4">
+        <h3 class="text-2xl">${r.title}</h3>
+        <p class="text-pink-800">${r.category}</p>
+      </div>
+    `;
+  }).join('') : '<p class="text-center text-xl py-12 text-gray-500">No favorites yet. ❤️ a recipe when adding it!</p>';
+}
+
+function filterByCategory(cat) {
+  const filtered = recipes.filter(r => r.category === cat);
+  renderRecipeGrid(filtered);
+}
+
+function filterRecipes() {
+  const term = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = recipes.filter(r => 
+    r.title.toLowerCase().includes(term) || 
+    (r.tags && r.tags.some(tag => tag.includes(term)))
+  );
+  renderRecipeGrid(filtered);
+}
+
+// Print Stubs
+function printIngredientsAndInstructions() { alert("Print functionality can be expanded here."); }
+function printOriginalRecipe() { alert("Full recipe print coming soon!"); }
+function saveNotes() { alert("Notes saved!"); }
 
 // Initialize
 window.onload = function() {
