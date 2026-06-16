@@ -27,8 +27,11 @@
     .nav-button {
       font-size: 1.35rem;
       font-weight: 700;
-      padding: 8px 14px;
+      padding: 8px 12px;
       transition: all 0.2s;
+    }
+    @media (max-width: 640px) {
+      .nav-button { font-size: 1.05rem; padding: 6px 8px; }
     }
     .nav-button:hover { color: #9f1239; transform: translateY(-1px); }
 
@@ -46,7 +49,7 @@
 <nav class="bg-[#FFF3E0] text-amber-900 py-5 sticky top-0 z-50 shadow-xl">
   <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
     <h1 class="text-3xl font-bold serif">Keely & Brian's</h1>
-    <div class="flex flex-wrap gap-4 text-lg font-medium">
+    <div class="flex flex-wrap gap-3 text-lg font-medium">
       <button onclick="showHome()" class="nav-button hover:text-pink-700">Home</button>
       <button onclick="showRecipesPage()" class="nav-button hover:text-pink-700">Recipes</button>
       <button onclick="showFavoritesPage()" class="nav-button hover:text-pink-700">Favs ❤️</button>
@@ -249,7 +252,7 @@ function showMenuPlanPage() {
   renderSavedMenus(); 
 }
 
-// ==================== ADD RECIPE (Stable) ====================
+// ==================== ADD RECIPE - RELIABLE ====================
 function resetAddForm() {
   newRecipeImages = [];
   document.getElementById('previewImages').innerHTML = '';
@@ -289,7 +292,7 @@ function addNewRecipe() {
       tags: document.getElementById('newTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
       ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
       instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
-      images: newRecipeImages.length ? [...newRecipeImages] : [defaultImg],
+      images: newRecipeImages.length > 0 ? [...newRecipeImages] : [defaultImg],
       favorite: document.getElementById('addHeart').innerHTML === '❤️',
       notes: ""
     };
@@ -297,7 +300,7 @@ function addNewRecipe() {
     recipes.unshift(newRecipe);
     saveRecipes();
     showAddSuccess(title);
-    setTimeout(() => openRecipe(newRecipe.id), 700);
+    setTimeout(() => openRecipe(newRecipe.id), 800);
   } catch (err) {
     console.error(err);
     alert("Something went wrong. Please try again.");
@@ -315,7 +318,7 @@ function showAddSuccess(title) {
   setTimeout(() => bubble.remove(), 2200);
 }
 
-// ==================== RECIPES RENDERING ====================
+// ==================== RECIPE RENDERING ====================
 function setViewMode(mode) {
   currentViewMode = mode;
   document.getElementById('btnList').classList.toggle('bg-pink-100', mode === 'list');
@@ -394,9 +397,8 @@ function closeSingleRecipe() {
 
 // Image Viewer
 function openImageViewer() {
-  const viewer = document.getElementById('imageViewer');
   document.getElementById('viewerImage').src = currentRecipe.images?.[0] || getDefaultImage(currentRecipe.category);
-  viewer.classList.remove('hidden');
+  document.getElementById('imageViewer').classList.remove('hidden');
 }
 function closeImageViewer() {
   document.getElementById('imageViewer').classList.add('hidden');
@@ -412,34 +414,36 @@ function renderFavorites() {
       <img src="${r.images?.[0] || getDefaultImage(r.category)}" class="w-full h-56 object-cover">
       <div class="p-6"><h3 class="text-2xl serif">${r.title}</h3></div>
     </div>
-  `).join('') : '<p class="text-gray-500 py-12">No favorites yet. ❤️ a recipe!</p>';
+  `).join('') : '<p class="text-gray-500 py-12">No favorites yet.</p>';
 }
 
 // Menu Planning
 function createNewMenu() {
-  const title = prompt("Menu Title (e.g. Week of June 16)", "Week of " + new Date().toLocaleDateString());
+  const title = prompt("Menu Title", "Week of " + new Date().toLocaleDateString());
   if (!title) return;
   const newMenu = { id: Date.now(), title, date: new Date().toISOString().split('T')[0] };
   menus.unshift(newMenu);
   saveMenus();
   renderSavedMenus();
-  alert("New menu created! (Full table coming soon)");
+  alert("New menu created!");
 }
 
 function renderSavedMenus() {
   const container = document.getElementById('savedMenusList');
   container.innerHTML = menus.map(m => `
-    <div onclick="alert('Opening ${m.title} — full editor coming soon')" class="bg-white p-6 rounded-3xl shadow cursor-pointer hover:bg-pink-50">
+    <div onclick="alert('Opening ${m.title}')" class="bg-white p-6 rounded-3xl shadow cursor-pointer hover:bg-pink-50">
       <h3 class="text-2xl">${m.title}</h3>
       <p class="text-pink-700">${m.date}</p>
     </div>
-  `).join('') || '<p class="text-gray-500 py-8">No menus yet. Create one above!</p>';
+  `).join('') || '<p class="text-gray-500 py-8">No menus yet.</p>';
 }
 
 // Camera & OCR
 function openCamera() {
   const input = document.createElement('input');
-  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
   input.onchange = e => handleFiles(e.target.files);
   input.click();
 }
@@ -447,7 +451,10 @@ function openCamera() {
 function handleFiles(files) {
   Array.from(files).forEach(file => {
     const reader = new FileReader();
-    reader.onload = e => { newRecipeImages.push(e.target.result); renderPreviewImages(); };
+    reader.onload = e => {
+      newRecipeImages.push(e.target.result);
+      renderPreviewImages();
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -491,18 +498,16 @@ function toggleFavoriteInAdd() {
 function filterRecipes() {
   const term = document.getElementById('searchInput').value.toLowerCase();
   const filtered = recipes.filter(r => r.title.toLowerCase().includes(term));
-  if (currentViewMode === 'list') renderRecipeList(); // simple version - can be expanded
+  if (currentViewMode === 'list') renderRecipeList();
   else renderRecipeGrid();
 }
 
 // Initialize
 window.onload = function() {
-  // Setup drop zone
   document.getElementById('dropZone').addEventListener('click', () => document.getElementById('imageUpload').click());
   document.getElementById('imageUpload').addEventListener('change', e => handleFiles(e.target.files));
-
   showHome();
-  console.log(`✅ App fully loaded with ${recipes.length} recipes`);
+  console.log(`✅ App loaded with ${recipes.length} recipes`);
 };
 </script>
 </body>
