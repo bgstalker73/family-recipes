@@ -54,6 +54,10 @@
       min-height: 60px;
     }
 
+    .recipe-list-item:hover {
+      background-color: #fdf4f8;
+    }
+
     @media (max-width: 640px) {
       .nav-button { font-size: 1.05rem !important; padding: 5px 8px !important; }
     }
@@ -90,10 +94,20 @@
 <!-- RECIPES -->
 <div id="recipesPage" class="max-w-6xl mx-auto px-6 py-12 hidden">
   <input id="searchInput" type="text" placeholder="🔍 Search recipes or tags..." 
-         class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-pink-900 mb-10" onkeyup="filterRecipes()">
-  <h2 class="text-5xl serif mb-8">Our Recipe Collection</h2>
+         class="w-full text-2xl py-6 px-8 rounded-3xl border-4 border-pink-900 mb-6" onkeyup="filterRecipes()">
+
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-5xl serif">Our Recipe Collection</h2>
+    <div class="flex gap-2 bg-white rounded-3xl p-1 shadow-inner">
+      <button onclick="setViewMode('list')" id="btnList" class="px-6 py-2 rounded-3xl font-medium">List</button>
+      <button onclick="setViewMode('grid')" id="btnGrid" class="px-6 py-2 rounded-3xl font-medium">Grid</button>
+    </div>
+  </div>
+
   <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-  <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12"></div>
+  
+  <div id="recipeListView" class="mt-8"></div>
+  <div id="recipeGridView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8 hidden"></div>
 </div>
 
 <!-- ADD RECIPE -->
@@ -168,14 +182,18 @@
 
       <div class="grid md:grid-cols-2 gap-12">
         <div>
-          <h3 class="text-3xl serif mb-6">🥕 Ingredients</h3>
-          <div id="singleIngredientsList" class="space-y-4 text-lg"></div>
+          <h3 class="text-3xl serif mb-4">🥕 Ingredients</h3>
+          <textarea id="editIngredients" class="w-full h-64 p-6 border-2 border-pink-200 rounded-3xl text-lg"></textarea>
         </div>
         <div>
-          <h3 class="text-3xl serif mb-6">👩‍🍳 Instructions</h3>
-          <div id="singleInstructionsList" class="space-y-6 text-lg"></div>
+          <h3 class="text-3xl serif mb-4">👩‍🍳 Instructions</h3>
+          <textarea id="editInstructions" class="w-full h-64 p-6 border-2 border-pink-200 rounded-3xl text-lg"></textarea>
         </div>
       </div>
+
+      <button onclick="saveRecipeEdits()" class="mt-6 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-semibold">
+        💾 Save Changes
+      </button>
 
       <div class="mt-16">
         <h3 class="text-3xl serif mb-4">Family Notes & Memories</h3>
@@ -221,6 +239,7 @@ let newRecipeImages = [];
 let currentRecipe = null;
 let currentImageIndex = 0;
 let isAdding = false;
+let currentViewMode = 'list';
 
 const categoryImages = {
   "Breakfast": "https://picsum.photos/id/1080/800/600",
@@ -245,13 +264,13 @@ function saveRecipes() {
   localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
 }
 
-// ==================== NAVIGATION ====================
+// Navigation
 function showHome() { hideAll(); document.getElementById('home').style.display = 'flex'; }
 function showRecipesPage() { 
   hideAll(); 
   document.getElementById('recipesPage').classList.remove('hidden'); 
-  renderRecipeGrid(recipes); 
-  renderCategories(); 
+  renderCategories();
+  setViewMode('list');
 }
 function showFavoritesPage() { 
   hideAll(); 
@@ -291,7 +310,7 @@ function resetButton() {
   btn.innerHTML = '🍳 ADD TO FAMILY COOKBOOK';
 }
 
-// ==================== ADD RECIPE (FIXED) ====================
+// Add Recipe
 function addNewRecipe() {
   if (isAdding) return;
   isAdding = true;
@@ -322,7 +341,6 @@ function addNewRecipe() {
     recipes.unshift(newRecipe);
     saveRecipes();
     showAddSuccess(title);
-    
     setTimeout(() => openRecipe(newRecipe.id), 700);
   } finally {
     resetButton();
@@ -338,6 +356,46 @@ function showAddSuccess(title) {
   setTimeout(() => bubble.remove(), 2000);
 }
 
+// View Mode
+function setViewMode(mode) {
+  currentViewMode = mode;
+  document.getElementById('btnList').classList.toggle('bg-pink-100', mode === 'list');
+  document.getElementById('btnGrid').classList.toggle('bg-pink-100', mode === 'grid');
+  document.getElementById('recipeListView').classList.toggle('hidden', mode !== 'list');
+  document.getElementById('recipeGridView').classList.toggle('hidden', mode !== 'grid');
+
+  if (mode === 'list') renderRecipeList(recipes);
+  else renderRecipeGrid(recipes);
+}
+
+function renderRecipeList(list) {
+  const container = document.getElementById('recipeListView');
+  container.innerHTML = list.map(r => `
+    <div onclick="openRecipe(${r.id})" class="recipe-list-item bg-white p-6 rounded-3xl shadow cursor-pointer hover:shadow-md flex gap-6 items-center border border-pink-100">
+      <img src="${r.images?.[0] || getDefaultImage(r.category)}" class="w-20 h-20 object-cover rounded-2xl">
+      <div class="flex-1">
+        <h3 class="text-2xl font-serif">${r.title}</h3>
+        <p class="text-pink-700">${r.category}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderRecipeGrid(list) {
+  const container = document.getElementById('recipeGridView');
+  container.innerHTML = list.map(r => {
+    const imgSrc = r.images?.[0] || getDefaultImage(r.category);
+    return `
+      <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer border border-pink-200">
+        <img src="${imgSrc}" class="w-full h-56 object-cover">
+        <div class="p-6">
+          <h3 class="text-2xl font-serif">${r.title}</h3>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 // Single Recipe
 function openRecipe(id) {
   currentRecipe = recipes.find(r => r.id === id);
@@ -350,12 +408,20 @@ function openRecipe(id) {
   document.getElementById('singleRecipeMainImage').src = currentRecipe.images?.[0] || getDefaultImage(currentRecipe.category);
   renderThumbnails();
 
-  document.getElementById('singleIngredientsList').innerHTML = currentRecipe.ingredients.map(i => `<div class="text-lg">• ${i}</div>`).join('');
-  document.getElementById('singleInstructionsList').innerHTML = currentRecipe.instructions.map((step, i) => `<div>${i+1}. ${step}</div>`).join('');
+  document.getElementById('editIngredients').value = (currentRecipe.ingredients || []).join('\n');
+  document.getElementById('editInstructions').value = (currentRecipe.instructions || []).join('\n');
 
   hideAll();
   document.getElementById('singleRecipePage').classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function saveRecipeEdits() {
+  if (!currentRecipe) return;
+  currentRecipe.ingredients = document.getElementById('editIngredients').value.split('\n').map(i => i.trim()).filter(Boolean);
+  currentRecipe.instructions = document.getElementById('editInstructions').value.split('\n').map(i => i.trim()).filter(Boolean);
+  saveRecipes();
+  alert("✅ Changes saved successfully!");
 }
 
 function renderThumbnails() {
@@ -506,20 +572,6 @@ function renderCategories() {
   `).join('');
 }
 
-function renderRecipeGrid(list) {
-  document.getElementById('recipeGrid').innerHTML = list.map(r => {
-    const imgSrc = r.images?.[0] || getDefaultImage(r.category);
-    return `
-      <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer border border-pink-200">
-        <img src="${imgSrc}" class="w-full h-56 object-cover">
-        <div class="p-6">
-          <h3 class="text-2xl font-serif">${r.title}</h3>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
 function renderFavorites() {
   const favorites = recipes.filter(r => r.favorite).sort((a,b) => b.id - a.id);
   const container = document.getElementById('favoritesGrid');
@@ -537,7 +589,8 @@ function renderFavorites() {
 
 function filterByCategory(cat) {
   const filtered = recipes.filter(r => r.category === cat);
-  renderRecipeGrid(filtered);
+  if (currentViewMode === 'list') renderRecipeList(filtered);
+  else renderRecipeGrid(filtered);
 }
 
 function filterRecipes() {
@@ -546,7 +599,8 @@ function filterRecipes() {
     r.title.toLowerCase().includes(term) || 
     (r.tags && r.tags.some(tag => tag.includes(term)))
   );
-  renderRecipeGrid(filtered);
+  if (currentViewMode === 'list') renderRecipeList(filtered);
+  else renderRecipeGrid(filtered);
 }
 
 function closeSingleRecipe() {
