@@ -58,6 +58,9 @@
       background-color: #fdf4f8;
     }
 
+    .small-btn { padding: 0.75rem 1.25rem !important; font-size: 1rem !important; }
+    .tiny-btn { padding: 0.5rem 1rem !important; font-size: 0.9rem !important; }
+
     @media (max-width: 640px) {
       .nav-button { font-size: 1.05rem !important; padding: 5px 8px !important; }
     }
@@ -186,27 +189,43 @@
           <textarea id="editIngredients" class="w-full h-64 p-6 border-2 border-pink-200 rounded-3xl text-lg"></textarea>
         </div>
         <div>
-          <h3 class="text-3xl serif mb-4">👩‍🍳 Instructions</h3>
+          <h3 class="text-3xl serif mb-4 flex justify-between items-center">
+            👩‍🍳 Instructions
+            <button onclick="openFullScreenInstructions()" class="text-pink-600 hover:text-pink-700 text-sm font-medium flex items-center gap-1">
+              <i class="fas fa-expand"></i> Full Screen
+            </button>
+          </h3>
           <textarea id="editInstructions" class="w-full h-64 p-6 border-2 border-pink-200 rounded-3xl text-lg"></textarea>
         </div>
       </div>
 
-      <button onclick="saveRecipeEdits()" class="mt-6 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-semibold">
+      <button onclick="saveRecipeEdits()" class="small-btn mt-6 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-semibold">
         💾 Save Changes
       </button>
 
       <div class="mt-16">
         <h3 class="text-3xl serif mb-4">Family Notes & Memories</h3>
         <textarea id="singleNotesArea" class="w-full h-40 p-6 border-2 border-pink-200 rounded-3xl"></textarea>
-        <button onclick="saveNotes()" class="mt-4 bg-pink-700 text-white px-10 py-4 rounded-2xl">Save Notes</button>
+        <button onclick="saveNotes()" class="small-btn mt-4 bg-pink-700 text-white px-10 py-4 rounded-2xl">Save Notes</button>
       </div>
 
       <div class="grid grid-cols-1 gap-4 mt-12">
-        <button onclick="printIngredientsAndInstructions()" class="w-full bg-pink-800 hover:bg-pink-700 text-white py-5 rounded-3xl text-xl">🖨️ Print Ingredients & Instructions</button>
-        <button onclick="printOriginalRecipe()" class="w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-7 rounded-3xl text-2xl font-bold">🖨️ Print Full Recipe with Photo</button>
-        <button onclick="deleteCurrentRecipeFromSingle()" class="w-full bg-red-700 hover:bg-red-600 text-white py-5 rounded-3xl text-xl">🗑️ Delete This Recipe</button>
+        <button onclick="printIngredientsAndInstructions()" class="tiny-btn w-full bg-pink-800 hover:bg-pink-700 text-white py-5 rounded-3xl text-xl">🖨️ Print Ingredients & Instructions</button>
+        <button onclick="printOriginalRecipe()" class="tiny-btn w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-7 rounded-3xl text-2xl font-bold">🖨️ Print Full Recipe with Photo</button>
+        <button onclick="deleteCurrentRecipeFromSingle()" class="tiny-btn w-full bg-red-700 hover:bg-red-600 text-white py-5 rounded-3xl text-xl">🗑️ Delete This Recipe</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Full-Screen Instructions -->
+<div id="fullScreenInstructions" class="hidden fixed inset-0 bg-black/95 z-[110] flex items-center justify-center p-4">
+  <div class="relative max-w-4xl w-full bg-white rounded-3xl max-h-[90vh] overflow-hidden">
+    <div class="p-8 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+      <h3 class="text-3xl serif">👩‍🍳 Instructions</h3>
+      <button onclick="closeFullScreenInstructions()" class="text-4xl hover:text-pink-600">✕</button>
+    </div>
+    <div id="fullInstructionsContent" class="p-8 overflow-auto max-h-[75vh] text-lg leading-relaxed whitespace-pre-wrap"></div>
   </div>
 </div>
 
@@ -482,6 +501,18 @@ function printCurrentViewerImage() {
   win.document.write(`<img src="${imgSrc}" style="max-width:100%; height:auto;">`);
   win.document.close();
   win.print();
+}
+
+// Full-Screen Instructions
+function openFullScreenInstructions() {
+  if (!currentRecipe) return;
+  document.getElementById('fullInstructionsContent').innerHTML = 
+    document.getElementById('editInstructions').value.replace(/\n/g, '<br><br>');
+  document.getElementById('fullScreenInstructions').classList.remove('hidden');
+}
+
+function closeFullScreenInstructions() {
+  document.getElementById('fullScreenInstructions').classList.add('hidden');
 }
 
 // Touch swipe
