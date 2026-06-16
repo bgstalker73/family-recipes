@@ -29,10 +29,11 @@
     .heart { cursor: pointer; font-size: 2.4rem; transition: all 0.3s; }
     .heart:hover { transform: scale(1.4) rotate(12deg); }
 
+    /* CHANGED: Top nav buttons - 33% bigger and bold */
     .nav-button {
-      font-size: 1.12rem;
-      font-weight: 600;
-      padding: 6px 14px;
+      font-size: 1.45rem;
+      font-weight: 700;
+      padding: 8px 16px;
       transition: all 0.2s;
     }
     .nav-button:hover {
@@ -48,17 +49,15 @@
       font-size: 1.1rem;
     }
 
-    /* Image Viewer Enhancements */
-    #imageViewer .swiper-container {
-      touch-action: pan-y;
+    /* CHANGED: Category buttons ~50% smaller */
+    .category-btn {
+      padding: 0.75rem 1rem !important;
+      font-size: 0.95rem !important;
+      min-height: 60px;
     }
 
     @media (max-width: 640px) {
-      .nav-button {
-        font-size: 0.95rem !important;
-        padding: 5px 10px !important;
-        line-height: 1.25;
-      }
+      .nav-button { font-size: 1.1rem !important; }
     }
   </style>
 </head>
@@ -157,12 +156,9 @@
 <div id="singleRecipePage" class="max-w-4xl mx-auto px-6 py-12 hidden">
   <button onclick="closeSingleRecipe()" class="mb-8 text-2xl hover:text-pink-700 flex items-center gap-3">← Back to Recipes</button>
   <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
-    <!-- Main Image with click to open viewer -->
     <div class="relative">
       <img id="singleRecipeMainImage" class="w-full h-96 object-cover cursor-pointer" onclick="openImageViewer()">
     </div>
-    
-    <!-- Thumbnails -->
     <div id="imageThumbnails" class="flex gap-3 p-6 overflow-x-auto bg-gray-50"></div>
 
     <div class="p-10">
@@ -198,11 +194,13 @@
   </div>
 </div>
 
-<!-- Enhanced Image Viewer -->
+<!-- Image Viewer -->
 <div id="imageViewer" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-4">
   <div class="relative max-w-5xl w-full">
-    <!-- Navigation -->
     <div class="absolute top-4 right-4 flex gap-3 z-10">
+      <button onclick="printCurrentViewerImage()" class="bg-white text-pink-900 px-5 py-2 rounded-2xl flex items-center gap-2 hover:bg-pink-100 shadow">
+        <i class="fas fa-print"></i> Print
+      </button>
       <button onclick="deleteCurrentViewerImage()" class="bg-red-600 text-white px-5 py-2 rounded-2xl flex items-center gap-2 hover:bg-red-700">
         <i class="fas fa-trash"></i> Delete
       </button>
@@ -212,20 +210,16 @@
       <button onclick="closeImageViewer()" class="text-white text-4xl hover:text-pink-300">✕</button>
     </div>
 
-    <!-- Image Container -->
     <div id="viewerImageContainer" class="relative">
       <img id="viewerImage" src="" alt="Recipe Image" class="max-h-[85vh] w-full object-contain rounded-2xl shadow-2xl">
     </div>
 
-    <!-- Prev / Next -->
-    <button onclick="prevImage()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white text-5xl w-14 h-14 flex items-center justify-center rounded-full transition">
-      ←
-    </button>
-    <button onclick="nextImage()" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white text-5xl w-14 h-14 flex items-center justify-center rounded-full transition">
-      →
-    </button>
+    <!-- Arrows moved to bottom -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-12">
+      <button onclick="prevImage()" class="bg-black/60 hover:bg-black/80 text-white text-5xl w-16 h-16 flex items-center justify-center rounded-full transition">←</button>
+      <button onclick="nextImage()" class="bg-black/60 hover:bg-black/80 text-white text-5xl w-16 h-16 flex items-center justify-center rounded-full transition">→</button>
+    </div>
 
-    <!-- Counter -->
     <div id="imageCounter" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 text-white px-6 py-2 rounded-full text-sm"></div>
   </div>
 </div>
@@ -260,7 +254,7 @@ function saveRecipes() {
   localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
 }
 
-// ==================== NAVIGATION ====================
+// Navigation
 function showHome() { hideAll(); document.getElementById('home').style.display = 'flex'; }
 function showRecipesPage() { 
   hideAll(); 
@@ -306,7 +300,7 @@ function resetButton() {
   btn.innerHTML = '🍳 ADD TO FAMILY COOKBOOK';
 }
 
-// ==================== ADD RECIPE ====================
+// Add Recipe - Fixed
 function addNewRecipe() {
   if (isAdding) return;
   isAdding = true;
@@ -337,7 +331,11 @@ function addNewRecipe() {
     recipes.unshift(newRecipe);
     saveRecipes();
     showAddSuccess(title);
-    openRecipe(newRecipe.id);
+    
+    setTimeout(() => {
+      openRecipe(newRecipe.id);
+    }, 700);
+
   } finally {
     resetButton();
     isAdding = false;
@@ -352,7 +350,7 @@ function showAddSuccess(title) {
   setTimeout(() => bubble.remove(), 2000);
 }
 
-// ==================== SINGLE RECIPE ====================
+// Single Recipe - Opens at top
 function openRecipe(id) {
   currentRecipe = recipes.find(r => r.id === id);
   if (!currentRecipe) return alert("Recipe not found");
@@ -361,32 +359,29 @@ function openRecipe(id) {
   document.getElementById('singleRecipeTags').innerHTML = currentRecipe.tags && currentRecipe.tags.length ? 
     `Tags: ${currentRecipe.tags.join(', ')}` : '';
 
-  const mainImg = document.getElementById('singleRecipeMainImage');
-  mainImg.src = currentRecipe.images?.[0] || getDefaultImage(currentRecipe.category);
-
+  document.getElementById('singleRecipeMainImage').src = currentRecipe.images?.[0] || getDefaultImage(currentRecipe.category);
   renderThumbnails();
-  
+
   document.getElementById('singleIngredientsList').innerHTML = currentRecipe.ingredients.map(i => `<div class="text-lg">• ${i}</div>`).join('');
   document.getElementById('singleInstructionsList').innerHTML = currentRecipe.instructions.map((step, i) => `<div>${i+1}. ${step}</div>`).join('');
 
   hideAll();
   document.getElementById('singleRecipePage').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function renderThumbnails() {
   const container = document.getElementById('imageThumbnails');
   container.innerHTML = (currentRecipe.images || []).map((src, i) => `
-    <img src="${src}" onclick="openImageViewer(${i})" 
-         class="w-24 h-24 object-cover rounded-xl cursor-pointer border-2 border-transparent hover:border-pink-500 transition">
+    <img src="${src}" onclick="openImageViewer(${i})" class="w-24 h-24 object-cover rounded-xl cursor-pointer border-2 border-transparent hover:border-pink-500 transition">
   `).join('');
 }
 
-// ==================== IMAGE VIEWER (Swipe + Delete + Crop) ====================
+// Image Viewer
 let viewerImages = [];
 
 function openImageViewer(startIndex = 0) {
-  if (!currentRecipe || !currentRecipe.images || currentRecipe.images.length === 0) return;
-  
+  if (!currentRecipe?.images?.length) return;
   viewerImages = currentRecipe.images;
   currentImageIndex = startIndex;
   updateViewerImage();
@@ -410,43 +405,46 @@ function nextImage() {
 
 function deleteCurrentViewerImage() {
   if (!confirm("Delete this photo?")) return;
-  
   viewerImages.splice(currentImageIndex, 1);
   currentRecipe.images = viewerImages;
   saveRecipes();
-  
   if (viewerImages.length === 0) {
     closeImageViewer();
-    openRecipe(currentRecipe.id); // refresh
+    openRecipe(currentRecipe.id);
     return;
   }
-  
-  if (currentImageIndex >= viewerImages.length) currentImageIndex = viewerImages.length - 1;
+  if (currentImageIndex >= viewerImages.length) currentImageIndex--;
   updateViewerImage();
   renderThumbnails();
 }
 
 function cropCurrentImage() {
-  alert("Crop feature coming soon! (Canvas-based cropper can be added in future updates)");
-  // Future: Implement HTML5 Canvas crop modal here
+  alert("Crop feature coming soon!");
 }
 
 function closeImageViewer() {
   document.getElementById('imageViewer').style.display = 'none';
 }
 
-// Touch swipe support
+function printCurrentViewerImage() {
+  const imgSrc = document.getElementById('viewerImage').src;
+  if (!imgSrc) return;
+  const win = window.open('');
+  win.document.write(`<img src="${imgSrc}" style="max-width:100%; height:auto;">`);
+  win.document.close();
+  win.print();
+}
+
+// Touch swipe
 let touchStartX = 0;
-document.getElementById('imageViewer').addEventListener('touchstart', e => {
-  touchStartX = e.changedTouches[0].screenX;
-});
+document.getElementById('imageViewer').addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
 document.getElementById('imageViewer').addEventListener('touchend', e => {
   const touchEndX = e.changedTouches[0].screenX;
   if (touchEndX < touchStartX - 50) nextImage();
   if (touchEndX > touchStartX + 50) prevImage();
 });
 
-// ==================== OTHER FUNCTIONS ====================
+// Other functions
 function toggleFavoriteInSingle() {
   if (!currentRecipe) return;
   currentRecipe.favorite = !currentRecipe.favorite;
@@ -468,7 +466,6 @@ function toggleFavoriteInAdd() {
   heart.innerHTML = heart.innerHTML === '♡' ? '❤️' : '♡';
 }
 
-// Image upload
 function openCamera() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -514,14 +511,13 @@ function removePreviewImage(i) {
 }
 
 function showImageViewerForAdd(src) {
-  alert("Preview image. Full multi-image viewer is for saved recipes.");
+  alert("Preview image. Full viewer available after saving.");
 }
 
-// Render functions
 function renderCategories() {
   const cats = ["Main Dishes", "Side Dishes", "Appetizers", "Soups", "Bread", "Desserts", "Salads", "Pasta", "Beverages", "Breakfast", "Sauces & Spices", "Specialty Items"];
   document.getElementById('categories').innerHTML = cats.map(cat => `
-    <div onclick="filterByCategory('${cat}')" class="bg-white p-6 rounded-3xl text-center cursor-pointer hover:bg-pink-50 border border-pink-900">
+    <div onclick="filterByCategory('${cat}')" class="category-btn bg-white p-6 rounded-3xl text-center cursor-pointer hover:bg-pink-50 border border-pink-900">
       <h3 class="text-xl">${cat}</h3>
     </div>
   `).join('');
@@ -575,7 +571,7 @@ function closeSingleRecipe() {
   showRecipesPage();
 }
 
-function printIngredientsAndInstructions() { alert("Print functionality coming soon!"); }
+function printIngredientsAndInstructions() { alert("Print coming soon!"); }
 function printOriginalRecipe() { alert("Full recipe print coming soon!"); }
 function saveNotes() { alert("Notes saved!"); }
 
