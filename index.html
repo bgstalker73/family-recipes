@@ -48,11 +48,20 @@
       border-radius: 1.5rem;
       font-size: 1.1rem;
     }
+
+    /* === MINIMAL CHANGE FOR MOBILE RIBBON BUTTONS === */
+    @media (max-width: 640px) {
+      .nav-button {
+        font-size: 0.95rem !important;
+        padding: 5px 10px !important;
+        line-height: 1.25;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen pb-20">
 
-<nav class="bg-[#F9CDDF] text-pink-900 py-5 sticky top-0 z-50 shadow-xl">
+<nav class="bg-[#FFF3E0] text-amber-900 py-5 sticky top-0 z-50 shadow-xl">
   <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
     <h1 class="text-3xl font-bold serif">Keely & Brian's</h1>
     <div class="flex flex-wrap gap-6 text-lg font-medium">
@@ -91,7 +100,6 @@
 <div id="addForm" class="max-w-2xl mx-auto px-6 py-12 hidden">
   <h2 class="text-5xl serif mb-10 text-center">Add a New Family Treasure 🍲</h2>
   <div class="bg-white p-10 rounded-3xl shadow-2xl">
-    <!-- CHANGED: Consistent size with other fields -->
     <input id="newTitle" placeholder="Recipe Title *" 
            class="form-input mb-8 text-center">
 
@@ -201,7 +209,7 @@
 </div>
 
 <script>
-// ==================== DATA & CORE FUNCTIONS ====================
+// (Your entire script remains unchanged)
 let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
 let newRecipeImages = [];
 let currentRecipe = null;
@@ -410,10 +418,6 @@ function deleteCurrentRecipeFromSingle() {
   alert("Recipe deleted.");
   closeSingleRecipe();
 }
-
-// Print functions
-function printIngredientsAndInstructions() { /* unchanged */ }
-function printOriginalRecipe() { /* unchanged */ }
 
 // Render functions
 function renderCategories() {
