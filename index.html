@@ -10,23 +10,16 @@
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@400;500;600&display=swap');
-    
     body { font-family: 'Poppins', sans-serif; background: #fffaf0; }
     .serif { font-family: 'Playfair Display', serif; }
 
     .hero { 
-      background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), 
-                  url('IMG_9206.JPEG') center/cover no-repeat fixed;
+      background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('IMG_9206.JPEG') center/cover no-repeat fixed;
       min-height: 100vh;
     }
 
-    .recipe-card, .recipe-list-item { 
-      transition: all 0.3s ease; 
-    }
-    .recipe-card:hover, .recipe-list-item:hover { 
-      transform: translateY(-8px); 
-      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); 
-    }
+    .recipe-card, .recipe-list-item { transition: all 0.3s ease; }
+    .recipe-card:hover, .recipe-list-item:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
 
     .heart { cursor: pointer; font-size: 2.4rem; transition: all 0.3s; }
     .heart:hover { transform: scale(1.4) rotate(12deg); }
@@ -46,20 +39,6 @@
       border-radius: 1.5rem;
       font-size: 1.1rem;
     }
-
-    .single-action-btn { transition: all 0.2s; }
-    .save-changes-btn { font-size: 1.1rem; padding: 0.75rem 2rem !important; }
-    .print-delete-btn { font-size: 1rem; padding: 0.6rem 1.25rem !important; }
-
-    @media (max-width: 640px) {
-      .nav-button { font-size: 1.1rem !important; padding: 6px 10px !important; }
-    }
-
-    .menu-table th, .menu-table td {
-      padding: 12px 8px; text-align: center; border: 2px solid #fce7f3;
-    }
-    .menu-table th { background: linear-gradient(135deg, #f9a8d4, #fda4af); color: #831843; }
-    .menu-table tr:nth-child(even) { background: #fff1f2; }
   </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -103,7 +82,6 @@
       <button onclick="setViewMode('grid')" id="btnGrid" class="px-6 py-2 rounded-3xl font-medium">Grid</button>
     </div>
   </div>
-  <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
   <div id="recipeListView" class="mt-8 space-y-4"></div>
   <div id="recipeGridView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8 hidden"></div>
 </div>
@@ -169,46 +147,33 @@
 <div id="singleRecipePage" class="max-w-4xl mx-auto px-6 py-12 hidden">
   <button onclick="closeSingleRecipe()" class="mb-8 text-2xl hover:text-pink-700 flex items-center gap-3">← Back to Recipes</button>
   <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
-    <div class="relative">
-      <div class="absolute top-4 left-4 flex gap-3 z-20">
-        <button onclick="printOriginalRecipe()" class="print-delete-btn bg-white/80 hover:bg-white text-gray-700 px-4 py-2 rounded-2xl flex items-center gap-2 text-sm shadow"><i class="fas fa-print"></i></button>
-        <button onclick="deleteCurrentRecipeFromSingle()" class="print-delete-btn bg-white/80 hover:bg-white text-red-600 px-4 py-2 rounded-2xl flex items-center gap-2 text-sm shadow"><i class="fas fa-trash"></i></button>
-        <button onclick="cropCurrentImage()" class="print-delete-btn bg-white/80 hover:bg-white text-gray-700 px-4 py-2 rounded-2xl flex items-center gap-2 text-sm shadow"><i class="fas fa-crop"></i></button>
-      </div>
-      <img id="singleRecipeMainImage" class="w-full h-96 object-cover cursor-pointer" onclick="openImageViewer()">
-    </div>
-    <div id="imageThumbnails" class="flex gap-3 p-6 overflow-x-auto bg-gray-50"></div>
+    <img id="singleRecipeMainImage" class="w-full h-96 object-cover cursor-pointer" onclick="openImageViewer()">
     <div class="p-10">
-      <div class="flex items-center gap-4 mb-6">
-        <h2 id="singleRecipeTitle" class="text-5xl serif flex-1"></h2>
-        <button onclick="toggleFavoriteInSingle()" id="singleHeart" class="heart text-red-500">♡</button>
-      </div>
-      <div id="singleRecipeTags" class="text-pink-700 mb-8"></div>
+      <h2 id="singleRecipeTitle" class="text-5xl serif"></h2>
+      <div id="singleRecipeTags" class="text-pink-700 my-4"></div>
 
-      <div class="grid md:grid-cols-2 gap-12">
+      <div class="grid md:grid-cols-2 gap-8">
         <div>
-          <h3 class="text-3xl serif mb-4">🥕 Ingredients</h3>
-          <textarea id="editIngredients" class="w-full h-64 p-6 border-2 border-pink-200 rounded-3xl text-lg"></textarea>
+          <h3 class="text-3xl serif mb-3">🥕 Ingredients</h3>
+          <textarea id="editIngredients" class="w-full h-64 p-6 border-2 border-pink-200 rounded-3xl"></textarea>
         </div>
         <div>
-          <h3 class="text-3xl serif mb-4">👩‍🍳 Instructions</h3>
-          <button onclick="alert('Full screen view - scroll the box below')" class="mb-3 text-pink-600 text-sm underline">🔎 Open Full Screen</button>
-          <textarea id="editInstructions" class="w-full h-64 p-6 border-2 border-pink-200 rounded-3xl text-lg"></textarea>
+          <h3 class="text-3xl serif mb-3">👩‍🍳 Instructions</h3>
+          <textarea id="editInstructions" class="w-full h-64 p-6 border-2 border-pink-200 rounded-3xl"></textarea>
         </div>
       </div>
 
-      <button onclick="saveRecipeEdits()" class="single-action-btn save-changes-btn mt-6 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-semibold">💾 Save Changes</button>
+      <button onclick="saveRecipeEdits()" class="mt-6 bg-green-600 text-white px-8 py-4 rounded-2xl">💾 Save Changes</button>
 
-      <div class="mt-16">
-        <h3 class="text-3xl serif mb-4">Family Notes & Memories</h3>
+      <div class="mt-12">
+        <h3 class="text-3xl serif mb-3">Family Notes</h3>
         <textarea id="singleNotesArea" class="w-full h-40 p-6 border-2 border-pink-200 rounded-3xl"></textarea>
-        <button onclick="saveNotes()" class="mt-4 bg-pink-700 text-white px-10 py-4 rounded-2xl">Save Notes</button>
+        <button onclick="saveNotes()" class="mt-4 bg-pink-700 text-white px-8 py-3 rounded-2xl">Save Notes</button>
       </div>
 
       <div class="grid grid-cols-1 gap-4 mt-12">
-        <button onclick="printIngredientsAndInstructions()" class="w-full bg-pink-800 hover:bg-pink-700 text-white py-5 rounded-3xl text-xl">🖨️ Print Ingredients & Instructions</button>
-        <button onclick="printOriginalRecipe()" class="w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-7 rounded-3xl text-2xl font-bold">🖨️ Print Full Recipe with Photo</button>
-        <button onclick="deleteCurrentRecipeFromSingle()" class="w-full bg-red-700 hover:bg-red-600 text-white py-5 rounded-3xl text-xl">🗑️ Delete This Recipe</button>
+        <button onclick="printOriginalRecipe()" class="w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-6 rounded-3xl text-xl font-bold">🖨️ Print Full Recipe</button>
+        <button onclick="deleteCurrentRecipeFromSingle()" class="w-full bg-red-700 text-white py-5 rounded-3xl">🗑️ Delete Recipe</button>
       </div>
     </div>
   </div>
@@ -217,20 +182,8 @@
 <!-- Image Viewer -->
 <div id="imageViewer" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-4">
   <div class="relative max-w-5xl w-full">
-    <div class="absolute top-4 left-1/2 -translate-x-1/2 flex gap-4 z-20 bg-black/70 backdrop-blur-md px-6 py-3 rounded-3xl">
-      <button onclick="printCurrentViewerImage()" class="text-white hover:text-gray-300"><i class="fas fa-print"></i></button>
-      <button onclick="deleteCurrentViewerImage()" class="text-white hover:text-gray-300"><i class="fas fa-trash"></i></button>
-      <button onclick="cropCurrentImage()" class="text-white hover:text-gray-300"><i class="fas fa-crop"></i></button>
-      <button onclick="closeImageViewer()" class="text-white hover:text-gray-300 text-2xl">✕</button>
-    </div>
-    <div class="relative mt-16">
-      <img id="viewerImage" src="" alt="Recipe Image" class="max-h-[80vh] w-full object-contain rounded-2xl shadow-2xl">
-    </div>
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-12">
-      <button onclick="prevImage()" class="bg-black/40 hover:bg-black/60 text-white text-4xl w-11 h-11 flex items-center justify-center rounded-full">←</button>
-      <button onclick="nextImage()" class="bg-black/40 hover:bg-black/60 text-white text-4xl w-11 h-11 flex items-center justify-center rounded-full">→</button>
-    </div>
-    <div id="imageCounter" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 text-white px-5 py-1.5 rounded-full text-sm"></div>
+    <img id="viewerImage" src="" class="max-h-[85vh] w-full object-contain rounded-2xl">
+    <button onclick="closeImageViewer()" class="absolute top-6 right-6 text-white text-5xl">✕</button>
   </div>
 </div>
 
@@ -247,27 +200,19 @@ let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
 let menus = JSON.parse(localStorage.getItem('keelyBrianMenus')) || [];
 let newRecipeImages = [];
 let currentRecipe = null;
-let currentImageIndex = 0;
-let viewerImages = [];
 let isAdding = false;
 let currentViewMode = 'list';
 
 const categoryImages = {
   "Breakfast": "https://picsum.photos/id/1080/800/600",
-  "Appetizers": "https://picsum.photos/id/292/800/600",
-  "Salads": "https://picsum.photos/id/431/800/600",
-  "Soups": "https://picsum.photos/id/669/800/600",
-  "Pasta": "https://picsum.photos/id/201/800/600",
-  "Side Dishes": "https://picsum.photos/id/312/800/600",
-  "Bread": "https://picsum.photos/id/870/800/600",
   "Main Dishes": "https://picsum.photos/id/1060/800/600",
-  "Desserts": "https://picsum.photos/id/1083/800/600",
-  "Beverages": "https://picsum.photos/id/133/800/600",
-  "Sauces & Spices": "https://picsum.photos/id/292/800/600",
-  "Specialty Items": "https://picsum.photos/id/292/800/600"
+  "Desserts": "https://picsum.photos/id/1083/800/600"
 };
 
-function getDefaultImage(cat) { return categoryImages[cat] || "https://picsum.photos/id/1080/800/600"; }
+function getDefaultImage(cat) {
+  return categoryImages[cat] || "https://picsum.photos/id/1080/800/600";
+}
+
 function saveRecipes() { localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes)); }
 function saveMenus() { localStorage.setItem('keelyBrianMenus', JSON.stringify(menus)); }
 
@@ -286,14 +231,25 @@ function showHome() { hideAll(); document.getElementById('home').style.display =
 function showRecipesPage() { 
   hideAll(); 
   document.getElementById('recipesPage').classList.remove('hidden'); 
-  renderCategories(); 
-  setViewMode('list'); 
+  setViewMode('list');
 }
-function showFavoritesPage() { hideAll(); document.getElementById('favoritesPage').classList.remove('hidden'); renderFavorites(); }
-function showAddForm() { hideAll(); resetAddForm(); document.getElementById('addForm').classList.remove('hidden'); }
-function showMenuPlanPage() { hideAll(); document.getElementById('menuPlanPage').classList.remove('hidden'); renderSavedMenus(); }
+function showFavoritesPage() { 
+  hideAll(); 
+  document.getElementById('favoritesPage').classList.remove('hidden'); 
+  renderFavorites(); 
+}
+function showAddForm() { 
+  hideAll(); 
+  resetAddForm(); 
+  document.getElementById('addForm').classList.remove('hidden'); 
+}
+function showMenuPlanPage() { 
+  hideAll(); 
+  document.getElementById('menuPlanPage').classList.remove('hidden'); 
+  renderSavedMenus(); 
+}
 
-// ==================== ADD RECIPE ====================
+// ==================== ADD RECIPE (Stable) ====================
 function resetAddForm() {
   newRecipeImages = [];
   document.getElementById('previewImages').innerHTML = '';
@@ -323,14 +279,17 @@ function addNewRecipe() {
     const title = document.getElementById('newTitle').value.trim();
     if (!title) { alert("Please enter a recipe title!"); return; }
 
+    const category = document.getElementById('newCategory').value || "Uncategorized";
+    const defaultImg = getDefaultImage(category);
+
     const newRecipe = {
       id: Date.now(),
       title: title,
-      category: document.getElementById('newCategory').value || "Uncategorized",
+      category: category,
       tags: document.getElementById('newTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
       ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
       instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
-      images: newRecipeImages.length ? [...newRecipeImages] : [getDefaultImage(document.getElementById('newCategory').value)],
+      images: newRecipeImages.length ? [...newRecipeImages] : [defaultImg],
       favorite: document.getElementById('addHeart').innerHTML === '❤️',
       notes: ""
     };
@@ -338,7 +297,7 @@ function addNewRecipe() {
     recipes.unshift(newRecipe);
     saveRecipes();
     showAddSuccess(title);
-    setTimeout(() => openRecipe(newRecipe.id), 800);
+    setTimeout(() => openRecipe(newRecipe.id), 700);
   } catch (err) {
     console.error(err);
     alert("Something went wrong. Please try again.");
@@ -350,42 +309,42 @@ function addNewRecipe() {
 
 function showAddSuccess(title) {
   const bubble = document.createElement('div');
-  bubble.style.cssText = `position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px 30px;border-radius:9999px;box-shadow:0 15px 35px rgba(0,0,0,0.3);z-index:10000;display:flex;align-items:center;gap:15px;`;
-  bubble.innerHTML = `<span class="text-5xl">👨‍🍳</span><span class="text-xl font-medium">Added "${title}" successfully!</span>`;
+  bubble.style.cssText = `position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:white;padding:25px 40px;border-radius:9999px;box-shadow:0 20px 40px rgba(0,0,0,0.3);z-index:10000;`;
+  bubble.innerHTML = `👨‍🍳 Added "${title}" successfully!`;
   document.body.appendChild(bubble);
   setTimeout(() => bubble.remove(), 2200);
 }
 
-// ==================== RECIPE RENDERING ====================
+// ==================== RECIPES RENDERING ====================
 function setViewMode(mode) {
   currentViewMode = mode;
   document.getElementById('btnList').classList.toggle('bg-pink-100', mode === 'list');
   document.getElementById('btnGrid').classList.toggle('bg-pink-100', mode === 'grid');
   document.getElementById('recipeListView').classList.toggle('hidden', mode !== 'list');
   document.getElementById('recipeGridView').classList.toggle('hidden', mode !== 'grid');
-  if (mode === 'list') renderRecipeList(recipes);
-  else renderRecipeGrid(recipes);
+  if (mode === 'list') renderRecipeList();
+  else renderRecipeGrid();
 }
 
-function renderRecipeList(list) {
+function renderRecipeList() {
   const container = document.getElementById('recipeListView');
-  container.innerHTML = list.map(r => `
-    <div onclick="openRecipe(${r.id})" class="recipe-list-item bg-white p-6 rounded-3xl shadow cursor-pointer hover:shadow-md flex gap-6 items-center border border-pink-100">
+  container.innerHTML = recipes.map(r => `
+    <div onclick="openRecipe(${r.id})" class="recipe-list-item bg-white p-6 rounded-3xl shadow cursor-pointer flex gap-6 items-center">
       <img src="${r.images?.[0] || getDefaultImage(r.category)}" class="w-20 h-20 object-cover rounded-2xl">
-      <div class="flex-1">
-        <h3 class="text-2xl font-serif">${r.title}</h3>
+      <div>
+        <h3 class="text-2xl serif">${r.title}</h3>
         <p class="text-pink-700">${r.category}</p>
       </div>
     </div>
-  `).join('');
+  `).join('') || '<p class="text-gray-500 py-12 text-center">No recipes yet. Add your first one!</p>';
 }
 
-function renderRecipeGrid(list) {
+function renderRecipeGrid() {
   const container = document.getElementById('recipeGridView');
-  container.innerHTML = list.map(r => `
-    <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer border border-pink-200">
+  container.innerHTML = recipes.map(r => `
+    <div onclick="openRecipe(${r.id})" class="recipe-card bg-white rounded-3xl overflow-hidden cursor-pointer">
       <img src="${r.images?.[0] || getDefaultImage(r.category)}" class="w-full h-56 object-cover">
-      <div class="p-6"><h3 class="text-2xl font-serif">${r.title}</h3></div>
+      <div class="p-6"><h3 class="text-2xl serif">${r.title}</h3></div>
     </div>
   `).join('');
 }
@@ -401,149 +360,149 @@ function openRecipe(id) {
   document.getElementById('editInstructions').value = currentRecipe.instructions?.join('\n') || '';
   document.getElementById('singleNotesArea').value = currentRecipe.notes || '';
 
-  renderThumbnails();
   hideAll();
   document.getElementById('singleRecipePage').classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  window.scrollTo(0, 0);
 }
 
-function renderThumbnails() {
-  const container = document.getElementById('imageThumbnails');
-  container.innerHTML = (currentRecipe.images || []).map((src, i) => `
-    <img src="${src}" onclick="openImageViewer(${i})" class="w-24 h-24 object-cover rounded-xl cursor-pointer border-2 border-transparent hover:border-pink-500 transition">
-  `).join('');
-}
-
-// ==================== IMAGE VIEWER ====================
-function openImageViewer(startIndex = 0) {
-  if (!currentRecipe?.images?.length) return;
-  viewerImages = currentRecipe.images;
-  currentImageIndex = startIndex;
-  updateViewerImage();
-  document.getElementById('imageViewer').style.display = 'flex';
-}
-
-function updateViewerImage() {
-  document.getElementById('viewerImage').src = viewerImages[currentImageIndex];
-  document.getElementById('imageCounter').textContent = `${currentImageIndex + 1} / ${viewerImages.length}`;
-}
-function prevImage() { currentImageIndex = (currentImageIndex - 1 + viewerImages.length) % viewerImages.length; updateViewerImage(); }
-function nextImage() { currentImageIndex = (currentImageIndex + 1) % viewerImages.length; updateViewerImage(); }
-function closeImageViewer() { document.getElementById('imageViewer').style.display = 'none'; }
-function printCurrentViewerImage() { window.print(); }
-function deleteCurrentViewerImage() { alert("Delete image coming soon"); }
-function cropCurrentImage() { alert("Crop coming soon"); }
-
-// ==================== OCR ====================
-async function startOCR() {
-  if (newRecipeImages.length === 0) {
-    alert("No images yet. Please take or upload a photo first.");
-    openCamera();
-    return;
-  }
-
-  const ocrBtn = document.getElementById('ocrBtn');
-  const originalHTML = ocrBtn.innerHTML;
-  ocrBtn.disabled = true;
-  ocrBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing OCR...`;
-
-  try {
-    let allText = "";
-    for (let src of newRecipeImages) {
-      const { data: { text } } = await Tesseract.recognize(src, 'eng');
-      allText += text + "\n";
-    }
-    const lines = allText.split('\n').filter(l => l.trim().length > 3);
-    document.getElementById('newIngredients').value = lines.slice(0, 15).join('\n');
-    document.getElementById('newInstructions').value = lines.slice(15).join('\n');
-    alert("✅ Autofill Recipe Complete!");
-  } catch (e) {
-    alert("OCR failed. You can type manually.");
-  } finally {
-    ocrBtn.disabled = false;
-    ocrBtn.innerHTML = originalHTML;
-  }
-}
-
-// ==================== OTHER FUNCTIONS ====================
-function toggleFavoriteInAdd() {
-  const heart = document.getElementById('addHeart');
-  heart.innerHTML = heart.innerHTML === '♡' ? '❤️' : '♡';
-}
-function toggleFavoriteInSingle() {
-  if (!currentRecipe) return;
-  currentRecipe.favorite = !currentRecipe.favorite;
-  document.getElementById('singleHeart').innerHTML = currentRecipe.favorite ? '❤️' : '♡';
-  saveRecipes();
-}
-function deleteCurrentRecipeFromSingle() {
-  if (!currentRecipe || !confirm(`Delete ${currentRecipe.title}?`)) return;
-  recipes = recipes.filter(r => r.id !== currentRecipe.id);
-  saveRecipes();
-  closeSingleRecipe();
-}
 function saveRecipeEdits() {
   if (!currentRecipe) return;
   currentRecipe.ingredients = document.getElementById('editIngredients').value.split('\n').map(i => i.trim()).filter(Boolean);
   currentRecipe.instructions = document.getElementById('editInstructions').value.split('\n').map(i => i.trim()).filter(Boolean);
   saveRecipes();
-  alert("Changes saved!");
+  alert("✅ Changes saved!");
 }
+
 function saveNotes() {
   if (!currentRecipe) return;
   currentRecipe.notes = document.getElementById('singleNotesArea').value;
   saveRecipes();
   alert("Notes saved!");
 }
-function printIngredientsAndInstructions() { window.print(); }
-function printOriginalRecipe() { window.print(); }
-function closeSingleRecipe() { hideAll(); showRecipesPage(); }
 
+function deleteCurrentRecipeFromSingle() {
+  if (!currentRecipe || !confirm(`Delete "${currentRecipe.title}"?`)) return;
+  recipes = recipes.filter(r => r.id !== currentRecipe.id);
+  saveRecipes();
+  closeSingleRecipe();
+}
+
+function closeSingleRecipe() {
+  hideAll();
+  showRecipesPage();
+}
+
+// Image Viewer
+function openImageViewer() {
+  const viewer = document.getElementById('imageViewer');
+  document.getElementById('viewerImage').src = currentRecipe.images?.[0] || getDefaultImage(currentRecipe.category);
+  viewer.classList.remove('hidden');
+}
+function closeImageViewer() {
+  document.getElementById('imageViewer').classList.add('hidden');
+}
+function printOriginalRecipe() { window.print(); }
+
+// Favorites
+function renderFavorites() {
+  const container = document.getElementById('favoritesGrid');
+  const favs = recipes.filter(r => r.favorite);
+  container.innerHTML = favs.length ? favs.map(r => `
+    <div onclick="openRecipe(${r.id})" class="bg-white rounded-3xl overflow-hidden cursor-pointer shadow">
+      <img src="${r.images?.[0] || getDefaultImage(r.category)}" class="w-full h-56 object-cover">
+      <div class="p-6"><h3 class="text-2xl serif">${r.title}</h3></div>
+    </div>
+  `).join('') : '<p class="text-gray-500 py-12">No favorites yet. ❤️ a recipe!</p>';
+}
+
+// Menu Planning
+function createNewMenu() {
+  const title = prompt("Menu Title (e.g. Week of June 16)", "Week of " + new Date().toLocaleDateString());
+  if (!title) return;
+  const newMenu = { id: Date.now(), title, date: new Date().toISOString().split('T')[0] };
+  menus.unshift(newMenu);
+  saveMenus();
+  renderSavedMenus();
+  alert("New menu created! (Full table coming soon)");
+}
+
+function renderSavedMenus() {
+  const container = document.getElementById('savedMenusList');
+  container.innerHTML = menus.map(m => `
+    <div onclick="alert('Opening ${m.title} — full editor coming soon')" class="bg-white p-6 rounded-3xl shadow cursor-pointer hover:bg-pink-50">
+      <h3 class="text-2xl">${m.title}</h3>
+      <p class="text-pink-700">${m.date}</p>
+    </div>
+  `).join('') || '<p class="text-gray-500 py-8">No menus yet. Create one above!</p>';
+}
+
+// Camera & OCR
 function openCamera() {
   const input = document.createElement('input');
   input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
   input.onchange = e => handleFiles(e.target.files);
   input.click();
 }
+
 function handleFiles(files) {
   Array.from(files).forEach(file => {
     const reader = new FileReader();
-    reader.onload = e => {
-      newRecipeImages.push(e.target.result);
-      renderPreviewImages();
-    };
+    reader.onload = e => { newRecipeImages.push(e.target.result); renderPreviewImages(); };
     reader.readAsDataURL(file);
   });
 }
+
 function renderPreviewImages() {
   const container = document.getElementById('previewImages');
   container.innerHTML = newRecipeImages.map((src, i) => `
     <div class="relative inline-block">
       <img src="${src}" class="w-32 h-32 object-cover rounded-2xl">
-      <button onclick="newRecipeImages.splice(${i},1);renderPreviewImages()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs">×</button>
+      <button onclick="newRecipeImages.splice(${i},1);renderPreviewImages()" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs">×</button>
     </div>
   `).join('');
 }
 
-function setupImageUpload() {
-  const drop = document.getElementById('dropZone');
-  drop.addEventListener('click', () => document.getElementById('imageUpload').click());
-  document.getElementById('imageUpload').addEventListener('change', e => handleFiles(e.target.files));
+async function startOCR() {
+  if (newRecipeImages.length === 0) { alert("Take a photo first!"); openCamera(); return; }
+  const btn = document.getElementById('ocrBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+
+  try {
+    let allText = "";
+    for (let src of newRecipeImages) {
+      const { data } = await Tesseract.recognize(src, 'eng');
+      allText += data.text + "\n";
+    }
+    const lines = allText.split('\n').filter(l => l.trim().length > 3);
+    document.getElementById('newIngredients').value = lines.slice(0,15).join('\n');
+    document.getElementById('newInstructions').value = lines.slice(15).join('\n');
+    alert("✅ Autofill Complete!");
+  } catch(e) { alert("OCR failed – type manually"); }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
-// Menu Plan Stubs
-function createNewMenu() { alert("Menu planner coming soon!"); }
-function renderSavedMenus() { document.getElementById('savedMenusList').innerHTML = "<p class='text-gray-500'>No menus yet.</p>"; }
-function renderCategories() { document.getElementById('categories').innerHTML = "<p class='text-gray-500'>Categories loaded.</p>"; }
-function renderFavorites() { document.getElementById('favoritesGrid').innerHTML = "<p class='text-gray-500'>No favorites yet.</p>"; }
-function filterRecipes() { /* search works when recipes exist */ }
+function toggleFavoriteInAdd() {
+  const heart = document.getElementById('addHeart');
+  heart.innerHTML = heart.innerHTML === '♡' ? '❤️' : '♡';
+}
+
+function filterRecipes() {
+  const term = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = recipes.filter(r => r.title.toLowerCase().includes(term));
+  if (currentViewMode === 'list') renderRecipeList(); // simple version - can be expanded
+  else renderRecipeGrid();
+}
 
 // Initialize
 window.onload = function() {
-  setupImageUpload();
-  renderCategories();
+  // Setup drop zone
+  document.getElementById('dropZone').addEventListener('click', () => document.getElementById('imageUpload').click());
+  document.getElementById('imageUpload').addEventListener('change', e => handleFiles(e.target.files));
+
   showHome();
-  console.log(`✅ App loaded with ${recipes.length} recipes`);
+  console.log(`✅ App fully loaded with ${recipes.length} recipes`);
 };
 </script>
 </body>
