@@ -52,8 +52,7 @@
   <div class="max-w-4xl px-6">
     <h1 class="text-6xl md:text-8xl font-serif italic tracking-wider mb-6">Keely & Brian's<br>Family Recipes</h1>
     <p class="text-3xl mb-12">Love. Tradition. Flavor.</p>
-    <button onclick="showRecipesPage()" 
-            class="bg-amber-700 hover:bg-amber-600 text-xl px-12 py-5 rounded-full transition-all active:scale-95">
+    <button onclick="showRecipesPage()" class="bg-amber-700 hover:bg-amber-600 text-xl px-12 py-5 rounded-full transition-all active:scale-95">
       Browse Family Favorites
     </button>
   </div>
@@ -65,8 +64,7 @@
     <input id="searchInput" type="text" placeholder="Search recipes..." 
            class="flex-1 text-2xl py-6 px-8 rounded-3xl border-4 border-amber-900 focus:outline-none focus:border-amber-700"
            onkeyup="filterRecipes()">
-    <button onclick="showAllRecipes()" 
-            class="bg-amber-900 hover:bg-amber-800 text-white px-8 py-6 rounded-3xl text-lg whitespace-nowrap">
+    <button onclick="showAllRecipes()" class="bg-amber-900 hover:bg-amber-800 text-white px-8 py-6 rounded-3xl text-lg whitespace-nowrap">
       All Recipes
     </button>
   </div>
@@ -104,6 +102,12 @@
       
       <div id="previewImages" class="flex flex-wrap gap-4 mt-8"></div>
       
+      <!-- Loading Indicator -->
+      <div id="imageLoading" class="hidden text-center text-amber-700 mt-4">
+        <i class="fas fa-spinner fa-spin mr-2"></i>
+        Processing photo...
+      </div>
+
       <button onclick="runOCR()" 
               class="mt-8 w-full bg-amber-800 hover:bg-amber-700 text-white py-5 rounded-3xl font-medium text-lg transition-all">
         ✨ Extract Text with OCR
@@ -111,8 +115,7 @@
       <p id="ocrStatus" class="text-center text-sm mt-4 text-gray-600 min-h-[1.25rem]"></p>
     </div>
 
-    <select id="newCategory" 
-            class="w-full mb-6 p-5 border-2 border-amber-900 rounded-3xl text-xl focus:outline-none focus:border-amber-700">
+    <select id="newCategory" class="w-full mb-6 p-5 border-2 border-amber-900 rounded-3xl text-xl focus:outline-none focus:border-amber-700">
       <option value="">Select Category</option>
       <option value="Breakfast">Breakfast</option>
       <option value="Appetizers">Appetizers</option>
@@ -155,6 +158,7 @@
 let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
 let newRecipeImages = [];
 let tesseractWorker = null;
+let isProcessingImage = false;
 
 // ==================== NAVIGATION ====================
 function hideAll() {
@@ -178,18 +182,29 @@ function showAddForm() {
   hideAll();
   newRecipeImages = [];
   document.getElementById('previewImages').innerHTML = '';
+  document.getElementById('imageLoading').classList.add('hidden');
   document.getElementById('ocrStatus').textContent = '';
   document.getElementById('addForm').classList.remove('hidden');
 }
 
-// ==================== CAMERA & UPLOAD ====================
+// ==================== CAMERA & UPLOAD (FIXED) ====================
 function openCamera() {
+  console.log("📸 openCamera called");
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
   input.capture = 'environment';
-  input.onchange = e => handleFiles(e.target.files);
-  input.click();
+  input.style.display = 'none';
+  
+  document.body.appendChild(input);
+
+  input.onchange = (e) => {
+    console.log("📸 Photo captured, processing...");
+    handleFiles(e.target.files);
+    document.body.removeChild(input);
+  };
+
+  setTimeout(() => input.click(), 50);
 }
 
 function setupImageUpload() {
@@ -199,7 +214,7 @@ function setupImageUpload() {
   dropZone.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', e => handleFiles(e.target.files));
 
-  // Drag & Drop support
+  // Drag & Drop
   dropZone.addEventListener('dragover', e => {
     e.preventDefault();
     dropZone.classList.add('dragover');
@@ -214,14 +229,33 @@ function setupImageUpload() {
 
 function handleFiles(files) {
   if (!files || files.length === 0) return;
-  
+
+  isProcessingImage = true;
+  document.getElementById('imageLoading').classList.remove('hidden');
+
+  let processed = 0;
+  const total = files.length;
+
   Array.from(files).forEach(file => {
     if (!file.type.startsWith('image/')) return;
-    
+
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e) => {
       newRecipeImages.push(e.target.result);
       renderPreviewImages();
+      processed++;
+
+      if (processed === total) {
+        isProcessingImage = false;
+        document.getElementById('imageLoading').classList.add('hidden');
+        console.log(`✅ All ${total} image(s) loaded successfully`);
+      }
+    };
+    reader.onerror = () => {
+      console.error("❌ FileReader error");
+      alert("Failed to read the image file");
+      document.getElementById('imageLoading').classList.add('hidden');
+      isProcessingImage = false;
     };
     reader.readAsDataURL(file);
   });
@@ -251,15 +285,13 @@ async function runOCR() {
     alert("Please take or upload at least one photo first");
     return;
   }
-
+  // ... (OCR code remains unchanged)
   const status = document.getElementById('ocrStatus');
   status.textContent = "🔄 Initializing OCR...";
 
   try {
     if (!tesseractWorker) {
-      tesseractWorker = await Tesseract.createWorker('eng', 1, {
-        logger: m => console.log(m)
-      });
+      tesseractWorker = await Tesseract.createWorker('eng', 1, { logger: m => console.log(m) });
     }
 
     status.textContent = "📸 Scanning images...";
@@ -284,7 +316,7 @@ async function runOCR() {
   }
 }
 
-// ==================== ADD RECIPE ====================
+// ==================== ADD RECIPE (ROBUST) ====================
 function addNewRecipe() {
   const title = document.getElementById('newTitle').value.trim();
   if (!title) {
@@ -292,33 +324,52 @@ function addNewRecipe() {
     return;
   }
 
+  if (isProcessingImage) {
+    alert("⏳ Please wait until the photo has finished processing.");
+    return;
+  }
+
+  if (newRecipeImages.length === 0) {
+    const shouldContinue = confirm("No photo was added. Save recipe without image?");
+    if (!shouldContinue) return;
+  }
+
   const newRecipe = {
     id: Date.now(),
     title: title,
     category: document.getElementById('newCategory').value || "Uncategorized",
     ingredients: document.getElementById('newIngredients').value
-      .split('\n')
-      .map(i => i.trim())
-      .filter(Boolean),
+      .split('\n').map(i => i.trim()).filter(Boolean),
     instructions: document.getElementById('newInstructions').value
-      .split('\n')
-      .map(i => i.trim())
-      .filter(Boolean),
+      .split('\n').map(i => i.trim()).filter(Boolean),
     images: newRecipeImages.length ? [...newRecipeImages] : ["https://picsum.photos/id/201/800/600"]
   };
 
-  recipes.unshift(newRecipe);
-  localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
-
-  alert(`✅ "${title}" added to the family cookbook!`);
-  showRecipesPage();
+  try {
+    recipes.unshift(newRecipe);
+    localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes));
+    
+    alert(`✅ "${title}" added successfully!`);
+    
+    // Reset form
+    newRecipeImages = [];
+    document.getElementById('previewImages').innerHTML = '';
+    document.getElementById('newTitle').value = '';
+    document.getElementById('newIngredients').value = '';
+    document.getElementById('newInstructions').value = '';
+    document.getElementById('imageLoading').classList.add('hidden');
+    
+    showRecipesPage();
+  } catch (err) {
+    console.error("Save error:", err);
+    alert("❌ Failed to save recipe. Please try again.");
+  }
 }
 
-// ==================== RENDERING ====================
+// ==================== RENDERING & OTHER FUNCTIONS ====================
 function renderCategories() {
   const cats = ["Breakfast", "Appetizers", "Salads", "Soups", "Pasta", "Side Dishes", 
                 "Bread", "Main Dishes", "Desserts", "Beverages", "Specialty Items"];
-  
   document.getElementById('categories').innerHTML = cats.map(cat => `
     <div onclick="filterByCategory('${cat}')" 
          class="bg-white p-6 rounded-3xl text-center cursor-pointer hover:bg-amber-50 border border-amber-900 transition-all hover:border-amber-700">
@@ -329,7 +380,6 @@ function renderCategories() {
 
 function renderRecipeGrid(list) {
   const grid = document.getElementById('recipeGrid');
-  
   if (list.length === 0) {
     grid.innerHTML = `<p class="col-span-full text-center text-2xl py-20 text-gray-500">No recipes found.</p>`;
     return;
@@ -355,29 +405,19 @@ function showRecipeDetail(id) {
   if (!recipe) return;
 
   document.getElementById('modalTitle').textContent = recipe.title;
-  
   let html = `
     <div class="flex gap-2 flex-wrap mb-8">
-      ${recipe.images.map(src => `
-        <img src="${src}" class="max-h-64 rounded-2xl shadow object-cover">
-      `).join('')}
+      ${recipe.images.map(src => `<img src="${src}" class="max-h-64 rounded-2xl shadow object-cover">`).join('')}
     </div>
-    
     <div class="mb-8">
       <h4 class="uppercase tracking-widest text-amber-800 text-sm mb-3">Ingredients</h4>
-      <ul class="list-disc pl-6 space-y-2 text-lg">
-        ${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}
-      </ul>
+      <ul class="list-disc pl-6 space-y-2 text-lg">${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}</ul>
     </div>
-    
     <div>
       <h4 class="uppercase tracking-widest text-amber-800 text-sm mb-3">Instructions</h4>
-      <ol class="list-decimal pl-6 space-y-4 text-lg">
-        ${recipe.instructions.map((step, i) => `<li>${step}</li>`).join('')}
-      </ol>
+      <ol class="list-decimal pl-6 space-y-4 text-lg">${recipe.instructions.map(step => `<li>${step}</li>`).join('')}</ol>
     </div>
   `;
-
   document.getElementById('modalContent').innerHTML = html;
   document.getElementById('recipeModal').classList.remove('hidden');
   document.getElementById('recipeModal').classList.add('flex');
@@ -389,7 +429,6 @@ function closeModal() {
   modal.classList.remove('flex');
 }
 
-// ==================== FILTERS ====================
 function filterByCategory(cat) {
   const filtered = recipes.filter(r => r.category === cat);
   renderRecipeGrid(filtered);
@@ -397,10 +436,7 @@ function filterByCategory(cat) {
 
 function filterRecipes() {
   const term = document.getElementById('searchInput').value.toLowerCase().trim();
-  if (!term) {
-    renderRecipeGrid(recipes);
-    return;
-  }
+  if (!term) return renderRecipeGrid(recipes);
   const filtered = recipes.filter(r => 
     r.title.toLowerCase().includes(term) || 
     r.ingredients.some(i => i.toLowerCase().includes(term)) ||
@@ -419,13 +455,6 @@ function init() {
   setupImageUpload();
   renderCategories();
   showHome();
-  
-  // Tailwind script sometimes needs a small delay on first load
-  setTimeout(() => {
-    if (recipes.length > 0) {
-      console.log(`${recipes.length} recipes loaded from localStorage`);
-    }
-  }, 300);
 }
 
 window.onload = init;
