@@ -22,13 +22,13 @@
     .recipe-card:hover, .recipe-list-item:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
 
     .nav-button { 
-      font-size: 1.35rem; 
+      font-size: 1.1rem; 
       font-weight: 700; 
-      padding: 8px 12px; 
+      padding: 6px 10px; 
       transition: all 0.2s; 
     }
     @media (max-width: 640px) { 
-      .nav-button { font-size: 1.05rem; padding: 6px 8px; } 
+      .nav-button { font-size: 0.95rem; padding: 5px 8px; } 
     }
 
     .form-input { 
@@ -52,11 +52,26 @@
 
     .category-btn {
       transition: all 0.2s ease;
+      font-size: 0.95rem;
+      padding: 8px 12px;
+    }
+    @media (max-width: 640px) {
+      .category-btn { font-size: 0.85rem; padding: 6px 10px; }
     }
     .category-btn.active {
       background-color: #db2777;
       color: white;
       transform: scale(1.05);
+    }
+
+    /* Full-screen instructions */
+    .full-screen-textarea {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: white;
+      z-index: 9999;
+      padding: 20px;
+      overflow-y: auto;
     }
   </style>
 </head>
@@ -104,7 +119,6 @@
   <div class="bg-white p-10 rounded-3xl shadow-2xl">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
       <input id="newTitle" placeholder="Recipe Title *" class="form-input text-center font-semibold">
-      
       <select id="newCategory" class="form-input">
         <option value="">Select Category</option>
         <option value="Main Dishes">Main Dishes</option>
@@ -122,7 +136,7 @@
       </select>
     </div>
 
-    <input id="newTags" placeholder="Tags (comma separated, e.g. quick, gluten-free, holiday)" class="form-input mb-8">
+    <input id="newTags" placeholder="Tags (comma separated)" class="form-input mb-8">
 
     <!-- Image Section -->
     <div class="mb-10 p-8 border-2 border-dashed border-pink-700 rounded-3xl bg-pink-50">
@@ -134,14 +148,14 @@
         </button>
         <div id="dropZone" class="p-8 text-center rounded-3xl cursor-pointer flex flex-col justify-center border-2 border-dashed border-pink-700 hover:bg-pink-100 transition">
           <i class="fas fa-cloud-upload-alt text-4xl text-pink-700"></i>
-          <span class="mt-3 font-medium">Upload Image(s)</span>
+          <span class="mt-3 font-medium text-center">Upload Image(s)</span>
           <input type="file" id="imageUpload" accept="image/*" class="hidden" multiple>
         </div>
       </div>
 
       <button onclick="startOCR()" id="ocrBtn" class="mt-6 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 text-base rounded-3xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50">
         <i class="fas fa-magic"></i> 
-        <span id="ocrBtnText">Autofill from Images (OCR)</span>
+        <span id="ocrBtnText">Autofill Recipe</span>
       </button>
 
       <div id="previewImages" class="flex flex-wrap gap-4 mt-8"></div>
@@ -157,12 +171,19 @@
     <div class="mb-10">
       <label class="block text-xl mb-3 font-medium">Instructions (one step per line)</label>
       <textarea id="newInstructions" placeholder="1. Preheat oven to 350°F&#10;2. Mix dry ingredients..." class="form-input h-52 resize-y"></textarea>
+      <button onclick="maximizeInstructions()" class="mt-3 text-pink-600 hover:text-pink-700 text-sm">🔍 Full Screen Instructions</button>
     </div>
 
     <!-- Notes -->
     <div class="mb-10">
       <label class="block text-xl mb-3 font-medium">Additional Notes / History</label>
       <textarea id="newNotes" placeholder="Grandma made this every Christmas..." class="form-input h-32 resize-y"></textarea>
+    </div>
+
+    <!-- Favorite Heart -->
+    <div class="flex items-center gap-3 mb-6">
+      <input type="checkbox" id="newFavorite" class="w-6 h-6 accent-pink-600">
+      <label for="newFavorite" class="text-xl">❤️ Add to Favorites</label>
     </div>
 
     <button onclick="addNewRecipe()" id="addRecipeBtn" class="w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-7 text-2xl rounded-3xl font-bold transition-all hover:brightness-110 disabled:opacity-70">
@@ -179,7 +200,8 @@
   <div class="bg-white rounded-3xl shadow-2xl p-8">
     <div class="flex justify-between items-start mb-6">
       <h2 id="singleRecipeTitle" class="text-5xl serif"></h2>
-      <div class="flex gap-4">
+      <div class="flex gap-4 items-center">
+        <button onclick="toggleFavorite()" id="singleFavoriteBtn" class="text-3xl">🤍</button>
         <button onclick="editCurrentRecipe()" class="text-pink-600 hover:text-pink-700"><i class="fas fa-edit"></i> Edit</button>
         <button onclick="printRecipe()" class="text-pink-600 hover:text-pink-700"><i class="fas fa-print"></i> Print</button>
       </div>
@@ -197,16 +219,28 @@
       <div>
         <h3 class="text-2xl font-semibold mb-4">Instructions</h3>
         <ol id="singleInstructions" class="space-y-4 text-lg"></ol>
+        <button onclick="maximizeInstructionsFromSingle()" class="mt-4 text-pink-600 hover:text-pink-700">🔍 Full Screen Instructions</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Image Viewer -->
+<!-- Image Viewer with Print -->
 <div id="imageViewer" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-4">
   <div class="relative max-w-5xl w-full">
     <img id="viewerImage" src="" class="max-h-[85vh] w-full object-contain rounded-2xl">
     <button onclick="closeImageViewer()" class="absolute top-6 right-6 text-white text-5xl hover:text-pink-400">✕</button>
+    <button onclick="printCurrentImage()" class="absolute top-6 left-6 bg-white text-black px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-gray-100">
+      <i class="fas fa-print"></i> Print Image
+    </button>
+  </div>
+</div>
+
+<!-- Full Screen Instructions -->
+<div id="fullScreenInstructions" class="hidden fixed inset-0 bg-white z-[110] p-8 overflow-y-auto">
+  <div class="max-w-4xl mx-auto">
+    <button onclick="closeFullScreenInstructions()" class="mb-8 text-3xl">✕ Close Full Screen</button>
+    <textarea id="fsInstructions" class="w-full h-[80vh] p-6 text-lg border-0 focus:outline-none"></textarea>
   </div>
 </div>
 
@@ -218,6 +252,7 @@ let currentRecipe = null;
 let isAdding = false;
 let ocrWorker = null;
 let currentCategoryFilter = "All";
+let currentViewMode = "list"; // "list" or "grid"
 
 const allCategories = [
   "All", "Main Dishes", "Side Dishes", "Appetizers", "Soups", "Bread",
@@ -261,6 +296,7 @@ function hideAll() {
   document.getElementById('addForm').classList.add('hidden');
   document.getElementById('singleRecipePage').classList.add('hidden');
   document.getElementById('imageViewer').classList.add('hidden');
+  document.getElementById('fullScreenInstructions').classList.add('hidden');
 }
 
 function showHome() { hideAll(); document.getElementById('home').classList.remove('hidden'); }
@@ -278,12 +314,12 @@ function showAddForm() {
   document.getElementById('addForm').classList.remove('hidden'); 
 }
 
-// ==================== CATEGORY FILTERS ====================
+// ==================== CATEGORY FILTERS (3 lines max on mobile) ====================
 function renderCategoryFilters() {
   const container = document.getElementById('categoryFilters');
   container.innerHTML = allCategories.map(cat => `
     <button onclick="filterByCategory('${cat}')" 
-            class="category-btn px-6 py-3 rounded-3xl font-medium text-lg border-2 
+            class="category-btn px-5 py-2.5 rounded-3xl font-medium border-2 
                    ${currentCategoryFilter === cat ? 'active border-pink-600 bg-pink-600 text-white' : 'border-pink-200 hover:border-pink-400'}">
       ${cat}
     </button>
@@ -354,7 +390,7 @@ function setupDropZone() {
   });
 }
 
-// ==================== ADD / EDIT RECIPE ====================
+// ==================== ADD RECIPE (more reliable) ====================
 function resetAddForm() {
   newRecipeImages = [];
   document.getElementById('previewImages').innerHTML = '';
@@ -364,6 +400,7 @@ function resetAddForm() {
   document.getElementById('newIngredients').value = '';
   document.getElementById('newInstructions').value = '';
   document.getElementById('newNotes').value = '';
+  document.getElementById('newFavorite').checked = false;
 }
 
 async function addNewRecipe() {
@@ -386,20 +423,26 @@ async function addNewRecipe() {
       instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
       images: newRecipeImages.length > 0 ? [...newRecipeImages] : [getDefaultImage()],
       notes: document.getElementById('newNotes').value.trim(),
-      favorite: false,
+      favorite: document.getElementById('newFavorite').checked,
       dateAdded: new Date().toISOString()
     };
 
     recipes.unshift(newRecipe);
     saveRecipes();
 
-    alert(`✅ "${title}" added successfully!`);
+    const bubble = document.createElement('div');
+    bubble.style.cssText = 'position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);background:white;padding:25px 40px;border-radius:9999px;box-shadow:0 25px 50px -12px rgb(0 0 0 / 0.4);z-index:10000;font-size:1.3rem;';
+    bubble.innerHTML = `✅ Added <strong>"${title}"</strong>!`;
+    document.body.appendChild(bubble);
+    setTimeout(() => bubble.remove(), 1800);
+
     resetAddForm();
     showRecipesPage();
+    openRecipe(newRecipe.id);
 
   } catch (err) {
     console.error(err);
-    alert("Failed to add recipe. Check console.");
+    alert("Failed to add recipe. Check console for details.");
   } finally {
     isAdding = false;
     btn.disabled = false;
@@ -407,13 +450,50 @@ async function addNewRecipe() {
   }
 }
 
-// Basic edit stub (expand as needed)
-function editCurrentRecipe() {
+// ==================== FAVORITES ====================
+function toggleFavorite() {
   if (!currentRecipe) return;
-  alert("Edit mode: Populate the add form with current data and change the button to 'Save Changes' (full implementation left as exercise or let me know for more help).");
+  currentRecipe.favorite = !currentRecipe.favorite;
+  saveRecipes();
+  document.getElementById('singleFavoriteBtn').innerHTML = currentRecipe.favorite ? '❤️' : '🤍';
 }
 
-// Print
+function showFavoritesPage() {
+  hideAll();
+  const favs = recipes.filter(r => r.favorite);
+  const container = document.getElementById('recipeListView');
+  container.innerHTML = favs.length ? favs.map(r => `
+    <div onclick="openRecipe(${r.id})" class="recipe-list-item bg-white p-8 rounded-3xl shadow cursor-pointer flex gap-6">
+      <img src="${r.images && r.images[0] ? r.images[0] : getDefaultImage()}" class="w-28 h-28 object-cover rounded-2xl">
+      <div class="flex-1 min-w-0">
+        <h3 class="text-2xl font-semibold mb-1">${r.title}</h3>
+        <p class="text-pink-700">${r.category || 'Uncategorized'}</p>
+      </div>
+    </div>
+  `).join('') : '<p class="text-gray-500 py-20 text-center text-xl">No favorites yet ❤️</p>';
+  document.getElementById('recipesPage').classList.remove('hidden');
+}
+
+// ==================== SINGLE RECIPE ====================
+function openRecipe(id) {
+  currentRecipe = recipes.find(r => r.id === id);
+  if (!currentRecipe) return alert("Recipe not found");
+
+  document.getElementById('singleRecipeTitle').textContent = currentRecipe.title;
+  document.getElementById('singleCategory').textContent = currentRecipe.category || 'Uncategorized';
+  document.getElementById('singleFavoriteBtn').innerHTML = currentRecipe.favorite ? '❤️' : '🤍';
+
+  const mainImg = document.getElementById('singleRecipeMainImage');
+  mainImg.src = currentRecipe.images && currentRecipe.images[0] ? currentRecipe.images[0] : getDefaultImage();
+
+  document.getElementById('singleIngredients').innerHTML = (currentRecipe.ingredients || []).map(ing => `<li class="flex gap-3"><span class="text-pink-600">•</span> ${ing}</li>`).join('');
+  document.getElementById('singleInstructions').innerHTML = (currentRecipe.instructions || []).map((step, i) => `<li class="flex gap-4"><span class="font-bold text-pink-600 shrink-0">${i+1}.</span><span>${step}</span></li>`).join('');
+
+  hideAll();
+  document.getElementById('singleRecipePage').classList.remove('hidden');
+}
+
+// Print recipe (ingredients + instructions)
 function printRecipe() {
   if (!currentRecipe) return;
   const printWindow = window.open('', '_blank');
@@ -433,24 +513,56 @@ function printRecipe() {
   printWindow.print();
 }
 
-// ==================== VIEW / RENDER ====================
-function openRecipe(id) {
-  currentRecipe = recipes.find(r => r.id === id);
-  if (!currentRecipe) return alert("Recipe not found");
-
-  document.getElementById('singleRecipeTitle').textContent = currentRecipe.title;
-  document.getElementById('singleCategory').textContent = currentRecipe.category || 'Uncategorized';
-  
-  const mainImg = document.getElementById('singleRecipeMainImage');
-  mainImg.src = currentRecipe.images && currentRecipe.images[0] ? currentRecipe.images[0] : getDefaultImage();
-
-  document.getElementById('singleIngredients').innerHTML = (currentRecipe.ingredients || []).map(ing => `<li class="flex gap-3"><span class="text-pink-600">•</span> ${ing}</li>`).join('');
-  document.getElementById('singleInstructions').innerHTML = (currentRecipe.instructions || []).map((step, i) => `<li class="flex gap-4"><span class="font-bold text-pink-600 shrink-0">${i+1}.</span><span>${step}</span></li>`).join('');
-
-  hideAll();
-  document.getElementById('singleRecipePage').classList.remove('hidden');
+// Print current image
+function printCurrentImage() {
+  const img = document.getElementById('viewerImage');
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html><head><title>Recipe Image</title></head><body style="margin:0;padding:20px;text-align:center;">
+      <img src="${img.src}" style="max-width:100%;max-height:90vh;">
+    </body></html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
 }
 
+// Full screen instructions
+function maximizeInstructions() {
+  const fs = document.getElementById('fullScreenInstructions');
+  const ta = document.getElementById('fsInstructions');
+  ta.value = document.getElementById('newInstructions').value;
+  fs.classList.remove('hidden');
+}
+
+function maximizeInstructionsFromSingle() {
+  const fs = document.getElementById('fullScreenInstructions');
+  const ta = document.getElementById('fsInstructions');
+  ta.value = document.getElementById('singleInstructions').textContent;
+  fs.classList.remove('hidden');
+}
+
+function closeFullScreenInstructions() {
+  document.getElementById('fullScreenInstructions').classList.add('hidden');
+}
+
+// Basic edit stub
+function editCurrentRecipe() {
+  if (!currentRecipe) return;
+  showAddForm();
+  // Populate form (simplified)
+  document.getElementById('newTitle').value = currentRecipe.title;
+  document.getElementById('newCategory').value = currentRecipe.category || '';
+  document.getElementById('newTags').value = (currentRecipe.tags || []).join(', ');
+  document.getElementById('newIngredients').value = (currentRecipe.ingredients || []).join('\n');
+  document.getElementById('newInstructions').value = (currentRecipe.instructions || []).join('\n');
+  document.getElementById('newNotes').value = currentRecipe.notes || '';
+  document.getElementById('newFavorite').checked = currentRecipe.favorite || false;
+  newRecipeImages = currentRecipe.images ? [...currentRecipe.images] : [];
+  renderPreviewImages();
+}
+
+// ==================== VIEW / RENDER (default to list view) ====================
 function renderRecipeList(filteredRecipes = recipes) {
   const container = document.getElementById('recipeListView');
   if (filteredRecipes.length === 0) {
@@ -504,7 +616,7 @@ function closeImageViewer() {
   document.getElementById('imageViewer').classList.add('hidden');
 }
 
-// ==================== OCR (unchanged) ====================
+// ==================== OCR ====================
 async function startOCR() {
   if (newRecipeImages.length === 0) { alert("Please add at least one image first!"); return; }
   const btn = document.getElementById('ocrBtn');
@@ -531,7 +643,7 @@ async function startOCR() {
     alert("OCR failed. Try clearer images.");
   } finally {
     btn.disabled = false;
-    btnText.innerHTML = `<i class="fas fa-magic"></i> Autofill from Images (OCR)`;
+    btnText.innerHTML = `<i class="fas fa-magic"></i> Autofill Recipe`;
   }
 }
 
@@ -540,7 +652,7 @@ window.onload = function() {
   setupDropZone();
   document.getElementById('imageUpload').addEventListener('change', e => handleFiles(e.target.files));
   showHome();
-  console.log("✅ Family Recipe App fully loaded with camera fixes");
+  console.log("✅ Family Recipe App fully updated");
 };
 </script>
 </body>
