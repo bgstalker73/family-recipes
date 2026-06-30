@@ -18,65 +18,50 @@
       min-height: 100vh;
     }
 
-    .recipe-card, .recipe-list-item { transition: all 0.3s ease; }
-    .recipe-card:hover, .recipe-list-item:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+    .recipe-list-item { transition: all 0.3s ease; }
+    .recipe-list-item:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
 
-    .nav-button { 
-      font-size: 1.1rem; 
-      font-weight: 700; 
-      padding: 6px 10px; 
-      transition: all 0.2s; 
-    }
-    @media (max-width: 640px) { 
-      .nav-button { font-size: 0.95rem; padding: 5px 8px; } 
-    }
+    .nav-button { font-size: 1.1rem; font-weight: 700; padding: 6px 10px; transition: all 0.2s; }
+    @media (max-width: 640px) { .nav-button { font-size: 0.95rem; padding: 5px 8px; } }
 
-    .form-input { 
+    .form-input { width: 100%; padding: 1.25rem; border: 2px solid #f9a8d4; border-radius: 1.5rem; font-size: 1.1rem; transition: all 0.2s; }
+    .form-input:focus { border-color: #db2777; outline: none; box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.15); }
+
+    .category-btn { transition: all 0.2s ease; font-size: 0.95rem; padding: 8px 12px; }
+    @media (max-width: 640px) { .category-btn { font-size: 0.85rem; padding: 6px 10px; } }
+    .category-btn.active { background-color: #db2777; color: white; transform: scale(1.05); }
+
+    .menu-card { transition: all 0.3s ease; }
+    .menu-card:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+
+    .meal-pill { font-size: 0.75rem; padding: 2px 10px; border-radius: 9999px; }
+
+    .menu-table th, .menu-table td { padding: 8px 12px; border: 1px solid #f9a8d4; text-align: center; }
+    .menu-table th { background: linear-gradient(to right, #db2777, #f472b6); color: white; font-weight: 600; }
+    
+    .menu-input { 
       width: 100%; 
-      padding: 1.25rem; 
-      border: 2px solid #f9a8d4; 
-      border-radius: 1.5rem; 
-      font-size: 1.1rem; 
+      padding: 6px 8px; 
+      border: 1px solid #f9a8d4; 
+      border-radius: 6px; 
       transition: all 0.2s;
     }
-    .form-input:focus {
-      border-color: #db2777;
-      outline: none;
-      box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.15);
+    .menu-input:focus { 
+      min-width: 220px; 
+      z-index: 20; 
+      box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.25);
+      background: white;
     }
-
-    .drop-zone-active {
+    .filled-input {
       background-color: #fce7f3;
       border-color: #db2777;
-    }
-
-    .category-btn {
-      transition: all 0.2s ease;
-      font-size: 0.95rem;
-      padding: 8px 12px;
-    }
-    @media (max-width: 640px) {
-      .category-btn { font-size: 0.85rem; padding: 6px 10px; }
-    }
-    .category-btn.active {
-      background-color: #db2777;
-      color: white;
-      transform: scale(1.05);
-    }
-
-    /* Full-screen instructions */
-    .full-screen-textarea {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: white;
-      z-index: 9999;
-      padding: 20px;
-      overflow-y: auto;
+      font-weight: 500;
     }
   </style>
 </head>
 <body class="min-h-screen pb-20">
 
+<!-- NAV -->
 <nav class="bg-[#FFF3E0] text-amber-900 py-5 sticky top-0 z-50 shadow-xl">
   <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
     <h1 class="text-3xl font-bold serif">Keely & Brian's</h1>
@@ -104,18 +89,15 @@
 <div id="recipesPage" class="max-w-6xl mx-auto px-6 py-12 hidden">
   <div class="flex flex-col md:flex-row md:items-center gap-6 mb-8">
     <input id="searchInput" type="text" placeholder="🔍 Search recipes..." 
-           class="flex-1 text-2xl py-6 px-8 rounded-3xl border-4 border-pink-900" 
-           onkeyup="filterRecipes()">
+           class="flex-1 text-2xl py-6 px-8 rounded-3xl border-4 border-pink-900" onkeyup="filterRecipes()">
   </div>
-
   <div id="categoryFilters" class="flex flex-wrap gap-3 mb-10"></div>
-
   <div id="recipeListView" class="space-y-4"></div>
 </div>
 
-<!-- ADD RECIPE -->
+<!-- ADD / EDIT RECIPE -->
 <div id="addForm" class="max-w-3xl mx-auto px-6 py-12 hidden">
-  <h2 class="text-5xl serif mb-10 text-center">Add a New Family Treasure 🍲</h2>
+  <h2 class="text-5xl serif mb-10 text-center" id="addFormTitle">Add a New Family Treasure 🍲</h2>
   <div class="bg-white p-10 rounded-3xl shadow-2xl">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
       <input id="newTitle" placeholder="Recipe Title *" class="form-input text-center font-semibold">
@@ -138,15 +120,14 @@
 
     <input id="newTags" placeholder="Tags (comma separated)" class="form-input mb-8">
 
-    <!-- Image Section -->
     <div class="mb-10 p-8 border-2 border-dashed border-pink-700 rounded-3xl bg-pink-50">
-      <label class="block text-xl mb-4 font-medium">📸 Recipe Card Images (multiple pages OK)</label>
+      <label class="block text-xl mb-4 font-medium">📸 Recipe Card Images</label>
       <div class="grid grid-cols-2 gap-6">
         <button onclick="openCamera()" class="bg-gradient-to-br from-pink-600 to-rose-600 text-white py-8 rounded-3xl flex flex-col items-center gap-3 hover:brightness-110 transition">
           <i class="fas fa-camera text-4xl"></i>
           <span class="font-semibold">Camera</span>
         </button>
-        <div id="dropZone" class="p-8 text-center rounded-3xl cursor-pointer flex flex-col justify-center border-2 border-dashed border-pink-700 hover:bg-pink-100 transition">
+        <div id="dropZone" class="p-8 text-center rounded-3xl cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-pink-700 hover:bg-pink-100 transition">
           <i class="fas fa-cloud-upload-alt text-4xl text-pink-700"></i>
           <span class="mt-3 font-medium text-center">Upload Image(s)</span>
           <input type="file" id="imageUpload" accept="image/*" class="hidden" multiple>
@@ -161,32 +142,31 @@
       <div id="previewImages" class="flex flex-wrap gap-4 mt-8"></div>
     </div>
 
-    <!-- Ingredients -->
     <div class="mb-8">
       <label class="block text-xl mb-3 font-medium">Ingredients (one per line)</label>
-      <textarea id="newIngredients" placeholder="• 2 cups flour&#10;• 1 tsp salt&#10;..." class="form-input h-52 resize-y"></textarea>
+      <textarea id="newIngredients" class="form-input h-52 resize-y" placeholder="• 2 cups flour&#10;• 1 tsp salt"></textarea>
     </div>
 
-    <!-- Instructions -->
     <div class="mb-10">
       <label class="block text-xl mb-3 font-medium">Instructions (one step per line)</label>
-      <textarea id="newInstructions" placeholder="1. Preheat oven to 350°F&#10;2. Mix dry ingredients..." class="form-input h-52 resize-y"></textarea>
+      <textarea id="newInstructions" class="form-input h-52 resize-y" placeholder="1. Preheat oven..."></textarea>
       <button onclick="maximizeInstructions()" class="mt-3 text-pink-600 hover:text-pink-700 text-sm">🔍 Full Screen Instructions</button>
     </div>
 
-    <!-- Notes -->
     <div class="mb-10">
       <label class="block text-xl mb-3 font-medium">Additional Notes / History</label>
-      <textarea id="newNotes" placeholder="Grandma made this every Christmas..." class="form-input h-32 resize-y"></textarea>
+      <textarea id="newNotes" class="form-input h-32 resize-y"></textarea>
     </div>
 
-    <!-- Favorite Heart -->
-    <div class="flex items-center gap-3 mb-6">
-      <input type="checkbox" id="newFavorite" class="w-6 h-6 accent-pink-600">
-      <label for="newFavorite" class="text-xl">❤️ Add to Favorites</label>
+    <div class="flex justify-center mb-6">
+      <input type="checkbox" id="newFavorite" class="hidden" onchange="updateNewFavoriteHeart()">
+      <label for="newFavorite" class="flex items-center gap-3 cursor-pointer">
+        <span id="newFavoriteHeart" class="text-4xl transition-transform hover:scale-110">🤍</span>
+        <span class="text-xl">Add to Favorites</span>
+      </label>
     </div>
 
-    <button onclick="addNewRecipe()" id="addRecipeBtn" class="w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-7 text-2xl rounded-3xl font-bold transition-all hover:brightness-110 disabled:opacity-70">
+    <button onclick="saveRecipe()" id="addRecipeBtn" class="w-full bg-gradient-to-r from-pink-900 to-rose-900 text-white py-7 text-2xl rounded-3xl font-bold transition-all hover:brightness-110">
       🍳 ADD TO FAMILY COOKBOOK
     </button>
   </div>
@@ -194,18 +174,17 @@
 
 <!-- SINGLE RECIPE -->
 <div id="singleRecipePage" class="max-w-4xl mx-auto px-6 py-12 hidden">
-  <button onclick="closeSingleRecipe()" class="mb-8 text-2xl hover:text-pink-700 flex items-center gap-2">
-    ← Back to Recipes
-  </button>
+  <button onclick="closeSingleRecipe()" class="mb-8 text-2xl hover:text-pink-700 flex items-center gap-2">← Back to Recipes</button>
   <div class="bg-white rounded-3xl shadow-2xl p-8">
-    <div class="flex justify-between items-start mb-6">
-      <h2 id="singleRecipeTitle" class="text-5xl serif"></h2>
-      <div class="flex gap-4 items-center">
+    <div class="mb-6">
+      <div class="flex justify-end gap-4 items-center mb-4">
         <button onclick="toggleFavorite()" id="singleFavoriteBtn" class="text-3xl">🤍</button>
         <button onclick="editCurrentRecipe()" class="text-pink-600 hover:text-pink-700"><i class="fas fa-edit"></i> Edit</button>
         <button onclick="printRecipe()" class="text-pink-600 hover:text-pink-700"><i class="fas fa-print"></i> Print</button>
       </div>
+      <h2 id="singleRecipeTitle" class="text-5xl serif"></h2>
     </div>
+
     <div class="flex gap-6 text-sm text-gray-600 mb-6">
       <span id="singleCategory"></span>
     </div>
@@ -222,21 +201,33 @@
         <button onclick="maximizeInstructionsFromSingle()" class="mt-4 text-pink-600 hover:text-pink-700">🔍 Full Screen Instructions</button>
       </div>
     </div>
+
+    <div class="mt-10 pt-6 border-t border-gray-200 flex justify-center">
+      <button onclick="deleteCurrentRecipe()" class="flex items-center gap-2 text-red-400 hover:text-red-600 p-2 transition">
+        <i class="fas fa-trash-alt text-xl"></i>
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- Image Viewer with Print -->
+<!-- IMAGE VIEWER -->
 <div id="imageViewer" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-4">
   <div class="relative max-w-5xl w-full">
-    <img id="viewerImage" src="" class="max-h-[85vh] w-full object-contain rounded-2xl">
-    <button onclick="closeImageViewer()" class="absolute top-6 right-6 text-white text-5xl hover:text-pink-400">✕</button>
-    <button onclick="printCurrentImage()" class="absolute top-6 left-6 bg-white text-black px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-gray-100">
-      <i class="fas fa-print"></i> Print Image
+    <img id="viewerImage" class="max-h-[80vh] w-full object-contain rounded-2xl">
+    
+    <button onclick="changeImageViewer(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl px-4 py-2 hover:text-pink-400 transition">←</button>
+    <button onclick="changeImageViewer(1)" class="absolute right-4 top-1/2 -translate-y-1/2 text-white text-4xl px-4 py-2 hover:text-pink-400 transition">→</button>
+    
+    <button onclick="closeImageViewer()" class="absolute top-6 right-6 text-white text-3xl hover:text-pink-400 p-2 transition">✕</button>
+    <button onclick="printCurrentImage()" class="absolute top-6 left-6 text-white text-3xl hover:text-pink-400 p-2 transition">
+      <i class="fas fa-print"></i>
     </button>
+    
+    <div id="imageCounter" class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full"></div>
   </div>
 </div>
 
-<!-- Full Screen Instructions -->
+<!-- FULL SCREEN INSTRUCTIONS -->
 <div id="fullScreenInstructions" class="hidden fixed inset-0 bg-white z-[110] p-8 overflow-y-auto">
   <div class="max-w-4xl mx-auto">
     <button onclick="closeFullScreenInstructions()" class="mb-8 text-3xl">✕ Close Full Screen</button>
@@ -244,24 +235,82 @@
   </div>
 </div>
 
+<!-- MENU PLANNING PAGE -->
+<div id="menuPlanPage" class="max-w-6xl mx-auto px-6 py-12 hidden">
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-4xl serif">Menu Planning 📅</h2>
+    <div class="flex gap-3">
+      <button onclick="createNewMenu()" class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-3xl font-semibold flex items-center gap-2">
+        <i class="fas fa-plus"></i> Create New Menu
+      </button>
+      <button onclick="renderMenusList()" class="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded-3xl font-semibold">Refresh List</button>
+    </div>
+  </div>
+  <div id="menusList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</div>
+
+<!-- MENU CREATION MODAL -->
+<div id="menuModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[120] p-4">
+  <div class="bg-white rounded-3xl p-8 max-w-lg w-full">
+    <h3 class="text-2xl font-semibold mb-6">Create New Menu</h3>
+    
+    <div class="space-y-4">
+      <input id="menuTitle" placeholder="Menu Title (e.g. Thanksgiving 2026)" class="form-input">
+      
+      <div>
+        <label class="block text-sm font-medium mb-1">People (comma separated)</label>
+        <input id="menuPeople" placeholder="Keely, Brian, Grandma" class="form-input">
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Start Date</label>
+          <input id="menuStartDate" type="date" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Number of Days</label>
+          <input id="menuDays" type="number" value="3" min="1" class="form-input">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-2">Include these meals:</label>
+        <div class="flex flex-wrap gap-3">
+          <label class="flex items-center gap-2"><input type="checkbox" id="mealBreakfast" checked> Breakfast</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="mealLunch" checked> Lunch</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="mealDinner" checked> Dinner</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="mealAppetizers"> Appetizers</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="mealDesserts" checked> Desserts</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="mealDrinks"> Drinks</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-4 mt-8">
+      <button onclick="closeMenuModal()" class="flex-1 py-3 rounded-3xl border">Cancel</button>
+      <button onclick="saveNewMenu()" class="flex-1 py-3 rounded-3xl bg-pink-600 text-white font-semibold">Create Menu</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ==================== DATA ====================
 let recipes = JSON.parse(localStorage.getItem('keelyBrianRecipes')) || [];
+let menus = JSON.parse(localStorage.getItem('keelyBrianMenus')) || [];
 let newRecipeImages = [];
 let currentRecipe = null;
+let editingRecipeId = null;
+let currentImageIndex = 0;
 let isAdding = false;
 let ocrWorker = null;
 let currentCategoryFilter = "All";
-let currentViewMode = "list"; // "list" or "grid"
 
-const allCategories = [
-  "All", "Main Dishes", "Side Dishes", "Appetizers", "Soups", "Bread",
-  "Desserts", "Salads", "Pasta", "Beverages", "Breakfast", "Sauces & Spices", "Specialty Items"
-];
+const allCategories = ["All", "Main Dishes", "Side Dishes", "Appetizers", "Soups", "Bread", "Desserts", "Salads", "Pasta", "Beverages", "Breakfast", "Sauces & Spices", "Specialty Items"];
 
 // ==================== UTILS ====================
 function getDefaultImage() { return "https://picsum.photos/id/1080/800/600"; }
 function saveRecipes() { localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes)); }
+function saveMenus() { localStorage.setItem('keelyBrianMenus', JSON.stringify(menus)); }
 
 // ==================== IMAGE COMPRESSION ====================
 function compressImage(file, maxWidth = 1200, quality = 0.85) {
@@ -297,24 +346,82 @@ function hideAll() {
   document.getElementById('singleRecipePage').classList.add('hidden');
   document.getElementById('imageViewer').classList.add('hidden');
   document.getElementById('fullScreenInstructions').classList.add('hidden');
+  document.getElementById('menuPlanPage').classList.add('hidden');
 }
 
-function showHome() { hideAll(); document.getElementById('home').classList.remove('hidden'); }
-function showRecipesPage() { 
-  hideAll(); 
-  document.getElementById('recipesPage').classList.remove('hidden'); 
+function showHome() {
+  hideAll();
+  document.getElementById('home').classList.remove('hidden');
+}
+
+function showRecipesPage() {
+  hideAll();
+  document.getElementById('recipesPage').classList.remove('hidden');
   renderCategoryFilters();
-  renderRecipeList(); 
-}
-function showFavoritesPage() { alert("Favorites page coming soon! ❤️"); }
-function showMenuPlanPage() { alert("Menu planning coming soon! 📅"); }
-function showAddForm() { 
-  hideAll(); 
-  resetAddForm(); 
-  document.getElementById('addForm').classList.remove('hidden'); 
+  renderRecipeList();
 }
 
-// ==================== CATEGORY FILTERS (3 lines max on mobile) ====================
+function showFavoritesPage() {
+  hideAll();
+  const favs = recipes.filter(r => r.favorite);
+  const container = document.getElementById('recipeListView');
+  
+  if (favs.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 py-20 text-center text-xl">No favorites yet ❤️</p>';
+  } else {
+    container.innerHTML = favs.map(r => `
+      <div onclick="openRecipe(${r.id})" class="recipe-list-item bg-white p-8 rounded-3xl shadow cursor-pointer flex gap-6">
+        <img src="${r.images && r.images[0] ? r.images[0] : getDefaultImage()}" class="w-28 h-28 object-cover rounded-2xl">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-2xl font-semibold mb-1">${r.title}</h3>
+          <p class="text-pink-700">${r.category || 'Uncategorized'}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('recipesPage').classList.remove('hidden');
+}
+
+function showAddForm() {
+  hideAll();
+  resetAddForm();
+  document.getElementById('addForm').classList.remove('hidden');
+  document.getElementById('addFormTitle').textContent = 'Add a New Family Treasure 🍲';
+  document.getElementById('addRecipeBtn').innerHTML = '🍳 ADD TO FAMILY COOKBOOK';
+}
+
+function showMenuPlanPage() {
+  hideAll();
+  document.getElementById('menuPlanPage').classList.remove('hidden');
+  renderMenusList();
+}
+
+// ==================== RECIPE OPENING ====================
+function openRecipe(id) {
+  currentRecipe = recipes.find(r => r.id === id);
+  if (!currentRecipe) return;
+
+  document.getElementById('singleRecipeTitle').textContent = currentRecipe.title || '';
+  document.getElementById('singleCategory').textContent = currentRecipe.category || '';
+
+  const favBtn = document.getElementById('singleFavoriteBtn');
+  favBtn.innerHTML = currentRecipe.favorite ? '❤️' : '🤍';
+
+  const ingContainer = document.getElementById('singleIngredients');
+  ingContainer.innerHTML = (currentRecipe.ingredients || []).map(item => `<li>${item}</li>`).join('');
+
+  const instContainer = document.getElementById('singleInstructions');
+  instContainer.innerHTML = (currentRecipe.instructions || []).map(step => `<li>${step}</li>`).join('');
+
+  const mainImg = document.getElementById('singleRecipeMainImage');
+  mainImg.src = (currentRecipe.images && currentRecipe.images[0]) ? currentRecipe.images[0] : getDefaultImage();
+
+  hideAll();
+  document.getElementById('singleRecipePage').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+// ==================== CATEGORY & RECIPE LIST ====================
 function renderCategoryFilters() {
   const container = document.getElementById('categoryFilters');
   container.innerHTML = allCategories.map(cat => `
@@ -330,6 +437,243 @@ function filterByCategory(category) {
   currentCategoryFilter = category;
   renderCategoryFilters();
   filterRecipes();
+}
+
+function renderRecipeList(filteredRecipes = recipes) {
+  const container = document.getElementById('recipeListView');
+  if (filteredRecipes.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 py-20 text-center text-xl">No recipes found.</p>';
+    return;
+  }
+  container.innerHTML = filteredRecipes.map(r => `
+    <div onclick="openRecipe(${r.id})" class="recipe-list-item bg-white p-8 rounded-3xl shadow cursor-pointer flex gap-6">
+      <img src="${r.images && r.images[0] ? r.images[0] : getDefaultImage()}" class="w-28 h-28 object-cover rounded-2xl">
+      <div class="flex-1 min-w-0">
+        <h3 class="text-2xl font-semibold mb-1">${r.title}</h3>
+        <p class="text-pink-700">${r.category || 'Uncategorized'}</p>
+        ${r.tags && r.tags.length ? `<p class="text-sm text-gray-500 mt-2">${r.tags.join(' • ')}</p>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterRecipes() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+  let filtered = recipes;
+  
+  if (currentCategoryFilter !== "All") {
+    filtered = filtered.filter(r => r.category === currentCategoryFilter);
+  }
+  
+  if (searchTerm) {
+    filtered = filtered.filter(r => 
+      r.title.toLowerCase().includes(searchTerm) ||
+      (r.category && r.category.toLowerCase().includes(searchTerm)) ||
+      (r.tags && r.tags.some(t => t.toLowerCase().includes(searchTerm))) ||
+      (r.ingredients && r.ingredients.some(i => i.toLowerCase().includes(searchTerm)))
+    );
+  }
+  renderRecipeList(filtered);
+}
+
+// ==================== RECIPE IMAGE GALLERY ====================
+function openImageViewer() {
+  if (!currentRecipe || !currentRecipe.images || currentRecipe.images.length === 0) return;
+  currentImageIndex = 0;
+  updateViewerImage();
+  document.getElementById('imageViewer').classList.remove('hidden');
+}
+
+function updateViewerImage() {
+  const img = document.getElementById('viewerImage');
+  const counter = document.getElementById('imageCounter');
+  if (!currentRecipe || !currentRecipe.images) return;
+  img.src = currentRecipe.images[currentImageIndex];
+  counter.textContent = `${currentImageIndex + 1} / ${currentRecipe.images.length}`;
+}
+
+function changeImageViewer(direction) {
+  if (!currentRecipe || !currentRecipe.images) return;
+  currentImageIndex = (currentImageIndex + direction + currentRecipe.images.length) % currentRecipe.images.length;
+  updateViewerImage();
+}
+
+function closeImageViewer() {
+  document.getElementById('imageViewer').classList.add('hidden');
+}
+
+// ==================== RECIPE FUNCTIONS ====================
+function resetAddForm() {
+  newRecipeImages = [];
+  editingRecipeId = null;
+  document.getElementById('previewImages').innerHTML = '';
+  document.getElementById('newTitle').value = '';
+  document.getElementById('newCategory').value = '';
+  document.getElementById('newTags').value = '';
+  document.getElementById('newIngredients').value = '';
+  document.getElementById('newInstructions').value = '';
+  document.getElementById('newNotes').value = '';
+  document.getElementById('newFavorite').checked = false;
+  const heart = document.getElementById('newFavoriteHeart');
+  if (heart) heart.innerHTML = '🤍';
+  document.getElementById('addRecipeBtn').innerHTML = '🍳 ADD TO FAMILY COOKBOOK';
+}
+
+function updateNewFavoriteHeart() {
+  const heart = document.getElementById('newFavoriteHeart');
+  const checkbox = document.getElementById('newFavorite');
+  if (heart && checkbox) {
+    heart.innerHTML = checkbox.checked ? '❤️' : '🤍';
+  }
+}
+
+async function saveRecipe() {
+  if (isAdding) return;
+  isAdding = true;
+  const btn = document.getElementById('addRecipeBtn');
+  btn.disabled = true;
+  btn.innerHTML = editingRecipeId ? 'Saving...' : 'Adding...';
+
+  try {
+    const title = document.getElementById('newTitle').value.trim();
+    if (!title) {
+      alert("Please enter a recipe title!");
+      btn.disabled = false;
+      btn.innerHTML = editingRecipeId ? '💾 SAVE CHANGES' : '🍳 ADD TO FAMILY COOKBOOK';
+      isAdding = false;
+      return;
+    }
+
+    const recipeData = {
+      title: title,
+      category: document.getElementById('newCategory').value || "Uncategorized",
+      tags: document.getElementById('newTags').value.split(',').map(t => t.trim()).filter(Boolean),
+      ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
+      instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
+      images: newRecipeImages.length > 0 ? [...newRecipeImages] : (editingRecipeId && currentRecipe ? currentRecipe.images : [getDefaultImage()]),
+      notes: document.getElementById('newNotes').value.trim(),
+      favorite: document.getElementById('newFavorite').checked,
+      dateAdded: new Date().toISOString()
+    };
+
+    if (editingRecipeId) {
+      const index = recipes.findIndex(r => r.id === editingRecipeId);
+      if (index !== -1) {
+        recipes[index] = { ...recipes[index], ...recipeData };
+      }
+      editingRecipeId = null;
+    } else {
+      recipeData.id = Date.now();
+      recipes.unshift(recipeData);
+    }
+
+    saveRecipes();
+
+    const bubble = document.createElement('div');
+    bubble.style.cssText = 'position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);background:white;padding:25px 40px;border-radius:9999px;box-shadow:0 25px 50px -12px rgb(0 0 0 / 0.4);z-index:10000;font-size:1.3rem;';
+    bubble.innerHTML = editingRecipeId ? `✅ Recipe updated!` : `✅ Added <strong>"${title}"</strong>!`;
+    document.body.appendChild(bubble);
+    setTimeout(() => bubble.remove(), 1800);
+
+    resetAddForm();
+    showRecipesPage();
+
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong. Please try again.");
+  } finally {
+    isAdding = false;
+    btn.disabled = false;
+    btn.innerHTML = '🍳 ADD TO FAMILY COOKBOOK';
+  }
+}
+
+function editCurrentRecipe() {
+  if (!currentRecipe) return;
+  editingRecipeId = currentRecipe.id;
+  showAddForm();
+  document.getElementById('addFormTitle').textContent = 'Edit Recipe';
+  document.getElementById('addRecipeBtn').innerHTML = '💾 SAVE CHANGES';
+
+  document.getElementById('newTitle').value = currentRecipe.title;
+  document.getElementById('newCategory').value = currentRecipe.category || '';
+  document.getElementById('newTags').value = (currentRecipe.tags || []).join(', ');
+  document.getElementById('newIngredients').value = (currentRecipe.ingredients || []).join('\n');
+  document.getElementById('newInstructions').value = (currentRecipe.instructions || []).join('\n');
+  document.getElementById('newNotes').value = currentRecipe.notes || '';
+  document.getElementById('newFavorite').checked = currentRecipe.favorite || false;
+
+  const heart = document.getElementById('newFavoriteHeart');
+  if (heart) heart.innerHTML = currentRecipe.favorite ? '❤️' : '🤍';
+
+  newRecipeImages = currentRecipe.images ? [...currentRecipe.images] : [];
+  renderPreviewImages();
+}
+
+function deleteCurrentRecipe() {
+  if (!currentRecipe) return;
+  if (!confirm("Throw this recipe in the dumpster?")) return;
+  recipes = recipes.filter(r => r.id !== currentRecipe.id);
+  saveRecipes();
+  closeSingleRecipe();
+}
+
+function toggleFavorite() {
+  if (!currentRecipe) return;
+  currentRecipe.favorite = !currentRecipe.favorite;
+  saveRecipes();
+  document.getElementById('singleFavoriteBtn').innerHTML = currentRecipe.favorite ? '❤️' : '🤍';
+}
+
+function printRecipe() {
+  if (!currentRecipe) return;
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html><head><title>${currentRecipe.title}</title>
+    <style>body{font-family:sans-serif;max-width:800px;margin:40px auto;line-height:1.6;}</style>
+    </head><body>
+      <h1>${currentRecipe.title}</h1>
+      <p><strong>Category:</strong> ${currentRecipe.category}</p>
+      <h2>Ingredients</h2><ul>${(currentRecipe.ingredients || []).map(i => `<li>${i}</li>`).join('')}</ul>
+      <h2>Instructions</h2><ol>${(currentRecipe.instructions || []).map((s,i) => `<li>${s}</li>`).join('')}</ol>
+      ${currentRecipe.notes ? `<h2>Notes</h2><p>${currentRecipe.notes}</p>` : ''}
+    </body></html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+function printCurrentImage() {
+  const img = document.getElementById('viewerImage');
+  if (!img || !img.src) return;
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html><head><title>Recipe Image</title></head><body style="margin:0;padding:20px;text-align:center;">
+      <img src="${img.src}" style="max-width:100%;max-height:90vh;">
+    </body></html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+function maximizeInstructions() {
+  const fs = document.getElementById('fullScreenInstructions');
+  const ta = document.getElementById('fsInstructions');
+  ta.value = document.getElementById('newInstructions').value;
+  fs.classList.remove('hidden');
+}
+
+function maximizeInstructionsFromSingle() {
+  const fs = document.getElementById('fullScreenInstructions');
+  const ta = document.getElementById('fsInstructions');
+  ta.value = document.getElementById('singleInstructions').textContent || '';
+  fs.classList.remove('hidden');
+}
+
+function closeFullScreenInstructions() {
+  document.getElementById('fullScreenInstructions').classList.add('hidden');
 }
 
 // ==================== IMAGE HANDLING ====================
@@ -366,10 +710,7 @@ function renderPreviewImages() {
   container.innerHTML = newRecipeImages.map((src, i) => `
     <div class="relative group">
       <img src="${src}" class="w-32 h-32 object-cover rounded-2xl shadow">
-      <button onclick="removeImage(${i});" 
-              class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white w-7 h-7 rounded-full text-xs flex items-center justify-center shadow">
-        ×
-      </button>
+      <button onclick="removeImage(${i});" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white w-7 h-7 rounded-full text-xs flex items-center justify-center shadow">×</button>
     </div>
   `).join('');
 }
@@ -390,242 +731,268 @@ function setupDropZone() {
   });
 }
 
-// ==================== ADD RECIPE (more reliable) ====================
-function resetAddForm() {
-  newRecipeImages = [];
-  document.getElementById('previewImages').innerHTML = '';
-  document.getElementById('newTitle').value = '';
-  document.getElementById('newCategory').value = '';
-  document.getElementById('newTags').value = '';
-  document.getElementById('newIngredients').value = '';
-  document.getElementById('newInstructions').value = '';
-  document.getElementById('newNotes').value = '';
-  document.getElementById('newFavorite').checked = false;
-}
+// ==================== MENU PLANNING ====================
+function renderMenusList() {
+  menus = JSON.parse(localStorage.getItem('keelyBrianMenus')) || [];
+  
+  const container = document.getElementById('menusList');
+  if (!container) return;
 
-async function addNewRecipe() {
-  if (isAdding) return;
-  isAdding = true;
-  const btn = document.getElementById('addRecipeBtn');
-  btn.disabled = true;
-  btn.innerHTML = 'Adding... 🍳';
-
-  try {
-    const title = document.getElementById('newTitle').value.trim();
-    if (!title) { alert("Please enter a recipe title!"); return; }
-
-    const newRecipe = {
-      id: Date.now(),
-      title: title,
-      category: document.getElementById('newCategory').value || "Uncategorized",
-      tags: document.getElementById('newTags').value.split(',').map(t => t.trim()).filter(Boolean),
-      ingredients: document.getElementById('newIngredients').value.split('\n').map(i => i.trim()).filter(Boolean),
-      instructions: document.getElementById('newInstructions').value.split('\n').map(i => i.trim()).filter(Boolean),
-      images: newRecipeImages.length > 0 ? [...newRecipeImages] : [getDefaultImage()],
-      notes: document.getElementById('newNotes').value.trim(),
-      favorite: document.getElementById('newFavorite').checked,
-      dateAdded: new Date().toISOString()
-    };
-
-    recipes.unshift(newRecipe);
-    saveRecipes();
-
-    const bubble = document.createElement('div');
-    bubble.style.cssText = 'position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);background:white;padding:25px 40px;border-radius:9999px;box-shadow:0 25px 50px -12px rgb(0 0 0 / 0.4);z-index:10000;font-size:1.3rem;';
-    bubble.innerHTML = `✅ Added <strong>"${title}"</strong>!`;
-    document.body.appendChild(bubble);
-    setTimeout(() => bubble.remove(), 1800);
-
-    resetAddForm();
-    showRecipesPage();
-    openRecipe(newRecipe.id);
-
-  } catch (err) {
-    console.error(err);
-    alert("Failed to add recipe. Check console for details.");
-  } finally {
-    isAdding = false;
-    btn.disabled = false;
-    btn.innerHTML = '🍳 ADD TO FAMILY COOKBOOK';
-  }
-}
-
-// ==================== FAVORITES ====================
-function toggleFavorite() {
-  if (!currentRecipe) return;
-  currentRecipe.favorite = !currentRecipe.favorite;
-  saveRecipes();
-  document.getElementById('singleFavoriteBtn').innerHTML = currentRecipe.favorite ? '❤️' : '🤍';
-}
-
-function showFavoritesPage() {
-  hideAll();
-  const favs = recipes.filter(r => r.favorite);
-  const container = document.getElementById('recipeListView');
-  container.innerHTML = favs.length ? favs.map(r => `
-    <div onclick="openRecipe(${r.id})" class="recipe-list-item bg-white p-8 rounded-3xl shadow cursor-pointer flex gap-6">
-      <img src="${r.images && r.images[0] ? r.images[0] : getDefaultImage()}" class="w-28 h-28 object-cover rounded-2xl">
-      <div class="flex-1 min-w-0">
-        <h3 class="text-2xl font-semibold mb-1">${r.title}</h3>
-        <p class="text-pink-700">${r.category || 'Uncategorized'}</p>
-      </div>
-    </div>
-  `).join('') : '<p class="text-gray-500 py-20 text-center text-xl">No favorites yet ❤️</p>';
-  document.getElementById('recipesPage').classList.remove('hidden');
-}
-
-// ==================== SINGLE RECIPE ====================
-function openRecipe(id) {
-  currentRecipe = recipes.find(r => r.id === id);
-  if (!currentRecipe) return alert("Recipe not found");
-
-  document.getElementById('singleRecipeTitle').textContent = currentRecipe.title;
-  document.getElementById('singleCategory').textContent = currentRecipe.category || 'Uncategorized';
-  document.getElementById('singleFavoriteBtn').innerHTML = currentRecipe.favorite ? '❤️' : '🤍';
-
-  const mainImg = document.getElementById('singleRecipeMainImage');
-  mainImg.src = currentRecipe.images && currentRecipe.images[0] ? currentRecipe.images[0] : getDefaultImage();
-
-  document.getElementById('singleIngredients').innerHTML = (currentRecipe.ingredients || []).map(ing => `<li class="flex gap-3"><span class="text-pink-600">•</span> ${ing}</li>`).join('');
-  document.getElementById('singleInstructions').innerHTML = (currentRecipe.instructions || []).map((step, i) => `<li class="flex gap-4"><span class="font-bold text-pink-600 shrink-0">${i+1}.</span><span>${step}</span></li>`).join('');
-
-  hideAll();
-  document.getElementById('singleRecipePage').classList.remove('hidden');
-}
-
-// Print recipe (ingredients + instructions)
-function printRecipe() {
-  if (!currentRecipe) return;
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(`
-    <html><head><title>${currentRecipe.title}</title>
-    <style>body{font-family:sans-serif;max-width:800px;margin:40px auto;line-height:1.6;} h1{margin-bottom:10px;}</style>
-    </head><body>
-      <h1>${currentRecipe.title}</h1>
-      <p><strong>Category:</strong> ${currentRecipe.category}</p>
-      <h2>Ingredients</h2><ul>${(currentRecipe.ingredients || []).map(i => `<li>${i}</li>`).join('')}</ul>
-      <h2>Instructions</h2><ol>${(currentRecipe.instructions || []).map((s,i) => `<li>${s}</li>`).join('')}</ol>
-      ${currentRecipe.notes ? `<h2>Notes</h2><p>${currentRecipe.notes}</p>` : ''}
-    </body></html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-}
-
-// Print current image
-function printCurrentImage() {
-  const img = document.getElementById('viewerImage');
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(`
-    <html><head><title>Recipe Image</title></head><body style="margin:0;padding:20px;text-align:center;">
-      <img src="${img.src}" style="max-width:100%;max-height:90vh;">
-    </body></html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-}
-
-// Full screen instructions
-function maximizeInstructions() {
-  const fs = document.getElementById('fullScreenInstructions');
-  const ta = document.getElementById('fsInstructions');
-  ta.value = document.getElementById('newInstructions').value;
-  fs.classList.remove('hidden');
-}
-
-function maximizeInstructionsFromSingle() {
-  const fs = document.getElementById('fullScreenInstructions');
-  const ta = document.getElementById('fsInstructions');
-  ta.value = document.getElementById('singleInstructions').textContent;
-  fs.classList.remove('hidden');
-}
-
-function closeFullScreenInstructions() {
-  document.getElementById('fullScreenInstructions').classList.add('hidden');
-}
-
-// Basic edit stub
-function editCurrentRecipe() {
-  if (!currentRecipe) return;
-  showAddForm();
-  // Populate form (simplified)
-  document.getElementById('newTitle').value = currentRecipe.title;
-  document.getElementById('newCategory').value = currentRecipe.category || '';
-  document.getElementById('newTags').value = (currentRecipe.tags || []).join(', ');
-  document.getElementById('newIngredients').value = (currentRecipe.ingredients || []).join('\n');
-  document.getElementById('newInstructions').value = (currentRecipe.instructions || []).join('\n');
-  document.getElementById('newNotes').value = currentRecipe.notes || '';
-  document.getElementById('newFavorite').checked = currentRecipe.favorite || false;
-  newRecipeImages = currentRecipe.images ? [...currentRecipe.images] : [];
-  renderPreviewImages();
-}
-
-// ==================== VIEW / RENDER (default to list view) ====================
-function renderRecipeList(filteredRecipes = recipes) {
-  const container = document.getElementById('recipeListView');
-  if (filteredRecipes.length === 0) {
-    container.innerHTML = '<p class="text-gray-500 py-20 text-center text-xl">No recipes found.</p>';
+  if (menus.length === 0) {
+    container.innerHTML = '<p class="text-center text-gray-500 py-12">No menus yet. Click "Create New Menu" above to get started!</p>';
     return;
   }
-  container.innerHTML = filteredRecipes.map(r => `
-    <div onclick="openRecipe(${r.id})" class="recipe-list-item bg-white p-8 rounded-3xl shadow cursor-pointer flex gap-6">
-      <img src="${r.images && r.images[0] ? r.images[0] : getDefaultImage()}" class="w-28 h-28 object-cover rounded-2xl">
-      <div class="flex-1 min-w-0">
-        <h3 class="text-2xl font-semibold mb-1">${r.title}</h3>
-        <p class="text-pink-700">${r.category || 'Uncategorized'}</p>
-        ${r.tags && r.tags.length ? `<p class="text-sm text-gray-500 mt-2">${r.tags.join(' • ')}</p>` : ''}
+
+  const sortedMenus = [...menus].sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
+  
+  container.innerHTML = sortedMenus.map(menu => `
+    <div onclick="viewMenu(${menu.id})" class="menu-card bg-white p-6 rounded-3xl shadow cursor-pointer border border-pink-100">
+      <div class="flex justify-between items-start">
+        <h3 class="font-semibold text-xl">${menu.title}</h3>
+        <span class="text-xs text-gray-500">${new Date(menu.dateCreated).toLocaleDateString()}</span>
+      </div>
+      <p class="text-pink-600 mt-2">${(menu.people || []).length} people • ${(menu.days || []).length} days</p>
+      <div class="mt-4 flex gap-2 flex-wrap">
+        ${((menu.mealTypes || [])).map(m => `<span class="meal-pill bg-pink-100 text-pink-700">${m}</span>`).join('')}
       </div>
     </div>
   `).join('');
 }
 
-function filterRecipes() {
-  const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-  let filtered = recipes;
-  if (currentCategoryFilter !== "All") {
-    filtered = filtered.filter(r => r.category === currentCategoryFilter);
-  }
-  if (searchTerm) {
-    filtered = filtered.filter(r => 
-      r.title.toLowerCase().includes(searchTerm) ||
-      (r.category && r.category.toLowerCase().includes(searchTerm)) ||
-      (r.tags && r.tags.some(t => t.toLowerCase().includes(searchTerm))) ||
-      (r.ingredients && r.ingredients.some(i => i.toLowerCase().includes(searchTerm)))
-    );
-  }
-  renderRecipeList(filtered);
+function createNewMenu() {
+  document.getElementById('menuModal').classList.remove('hidden');
+  document.getElementById('menuTitle').value = '';
+  document.getElementById('menuPeople').value = '';
+  document.getElementById('menuStartDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('menuDays').value = 3;
 }
 
-function closeSingleRecipe() { 
-  hideAll(); 
-  showRecipesPage(); 
+function closeMenuModal() {
+  document.getElementById('menuModal').classList.add('hidden');
 }
 
-function openImageViewer() {
-  const viewer = document.getElementById('imageViewer');
-  const img = document.getElementById('viewerImage');
-  if (currentRecipe && currentRecipe.images && currentRecipe.images.length > 0) {
-    img.src = currentRecipe.images[0];
+function saveNewMenu() {
+  const title = document.getElementById('menuTitle').value.trim();
+  if (!title) {
+    alert("Please enter a menu title");
+    return;
   }
-  viewer.classList.remove('hidden');
+
+  const people = document.getElementById('menuPeople').value.split(',').map(p => p.trim()).filter(Boolean);
+  const startDate = document.getElementById('menuStartDate').value || new Date().toISOString().split('T')[0];
+  const numDays = parseInt(document.getElementById('menuDays').value) || 3;
+
+  const mealTypes = [];
+  if (document.getElementById('mealBreakfast').checked) mealTypes.push('Breakfast');
+  if (document.getElementById('mealLunch').checked) mealTypes.push('Lunch');
+  if (document.getElementById('mealDinner').checked) mealTypes.push('Dinner');
+  if (document.getElementById('mealAppetizers').checked) mealTypes.push('Appetizers');
+  if (document.getElementById('mealDesserts').checked) mealTypes.push('Desserts');
+  if (document.getElementById('mealDrinks').checked) mealTypes.push('Drinks');
+
+  const newMenu = {
+    id: Date.now(),
+    title: title,
+    people: people.length > 0 ? people : ['Family'],
+    startDate: startDate,
+    days: Array.from({ length: numDays }, (_, i) => {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      return { date: d.toISOString().split('T')[0] };
+    }),
+    mealTypes: mealTypes.length > 0 ? mealTypes : ['Dinner'],
+    assignments: {},
+    dateCreated: new Date().toISOString()
+  };
+
+  menus.push(newMenu);
+  saveMenus();
+
+  menus = JSON.parse(localStorage.getItem('keelyBrianMenus')) || [];
+
+  closeMenuModal();
+
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:14px 28px;border-radius:9999px;box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.2);z-index:99999;font-weight:500;';
+  toast.innerHTML = `✅ Menu "${title}" created successfully!`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2800);
+
+  setTimeout(() => {
+    renderMenusList();
+  }, 300);
 }
 
-function closeImageViewer() {
-  document.getElementById('imageViewer').classList.add('hidden');
+function viewMenu(menuId) {
+  let menu = menus.find(m => m.id === menuId);
+  if (!menu) return;
+
+  const container = document.createElement('div');
+  container.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[130] p-4 overflow-auto';
+  
+  let tableHTML = `
+    <div class="bg-white rounded-3xl max-w-[95vw] w-full p-6">
+      <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center gap-4">
+          <h2 class="text-3xl font-semibold">${menu.title}</h2>
+          <button onclick="showMenuSummary(${menu.id}, this)" 
+                  class="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-sm font-semibold flex items-center gap-2">
+            📋 View Full Summary
+          </button>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="saveMenuEdits(${menu.id}, this)" class="px-6 py-2 bg-green-600 text-white rounded-2xl font-semibold">Save Changes</button>
+          <button onclick="deleteMenu(${menu.id}, this)" class="px-6 py-2 bg-red-500 text-white rounded-2xl font-semibold">Delete Menu</button>
+          <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-gray-200 rounded-2xl font-semibold">Close</button>
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="menu-table w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th class="sticky left-0 bg-white z-10">Person</th>
+  `;
+
+  menu.days.forEach(day => {
+    const dateLabel = new Date(day.date).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+    tableHTML += `<th colspan="${menu.mealTypes.length}">${dateLabel}</th>`;
+  });
+  tableHTML += `</tr><tr><th class="sticky left-0 bg-white z-10"></th>`;
+
+  menu.days.forEach(day => {
+    menu.mealTypes.forEach(meal => {
+      const isWide = (meal === 'Dinner' || meal === 'Appetizers');
+      const widthStyle = isWide ? 'min-width:180px' : 'min-width:120px';
+      tableHTML += `<th style="${widthStyle}">${meal}</th>`;
+    });
+  });
+  tableHTML += `</tr></thead><tbody>`;
+
+  (menu.people || []).forEach(person => {
+    tableHTML += `<tr><td class="font-semibold sticky left-0 bg-white z-10">${person}</td>`;
+    
+    menu.days.forEach(day => {
+      menu.mealTypes.forEach(meal => {
+        const key = `${day.date}-${meal}`;
+        const value = (menu.assignments && menu.assignments[person] && menu.assignments[person][key]) || '';
+        const filledClass = value.trim() ? 'filled-input' : '';
+        
+        tableHTML += `<td><input type="text" value="${value}" data-person="${person}" data-key="${key}" class="menu-input ${filledClass}"></td>`;
+      });
+    });
+    tableHTML += `</tr>`;
+  });
+
+  tableHTML += `</tbody></table></div>
+    <p class="text-xs text-gray-500 mt-4">Tip: Click any box to expand it. Filled boxes are highlighted in pink.</p>
+  </div>`;
+
+  container.innerHTML = tableHTML;
+  document.body.appendChild(container);
+}
+
+function showMenuSummary(menuId, buttonEl) {
+  const menu = menus.find(m => m.id === menuId);
+  if (!menu) return;
+
+  const summaryContainer = document.createElement('div');
+  summaryContainer.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[140] p-4';
+
+  let summaryHTML = `
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-8 max-h-[85vh] overflow-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-semibold">Full Summary – ${menu.title}</h3>
+        <button onclick="this.closest('.fixed').remove()" class="text-2xl px-3">✕</button>
+      </div>
+      <div class="space-y-6">
+  `;
+
+  (menu.people || []).forEach(person => {
+    summaryHTML += `<div class="border border-pink-200 rounded-2xl p-4">
+      <h4 class="font-semibold text-lg mb-3 text-pink-700">${person}</h4>
+      <div class="space-y-2">`;
+
+    if (menu.assignments && menu.assignments[person]) {
+      Object.keys(menu.assignments[person]).forEach(key => {
+        const value = menu.assignments[person][key];
+        if (value && value.trim() !== '') {
+          const [dateStr, meal] = key.split('-');
+          const date = new Date(dateStr);
+          const dateLabel = date.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+          });
+          summaryHTML += `<div class="flex justify-between bg-pink-50 px-4 py-2.5 rounded-xl text-sm">
+            <span class="font-medium">${dateLabel} &nbsp;&nbsp;&nbsp; <strong>${meal}</strong></span>
+            <span class="text-gray-700">${value}</span>
+          </div>`;
+        }
+      });
+    } else {
+      summaryHTML += `<p class="text-gray-500 italic">Nothing assigned yet</p>`;
+    }
+
+    summaryHTML += `</div></div>`;
+  });
+
+  summaryHTML += `</div></div>`;
+  summaryContainer.innerHTML = summaryHTML;
+  document.body.appendChild(summaryContainer);
+}
+
+function saveMenuEdits(menuId, buttonEl) {
+  const menu = menus.find(m => m.id === menuId);
+  if (!menu) return;
+
+  if (!menu.assignments) menu.assignments = {};
+
+  const inputs = buttonEl.closest('.fixed').querySelectorAll('.menu-input');
+  
+  inputs.forEach(input => {
+    const person = input.dataset.person;
+    const key = input.dataset.key;
+    
+    if (!menu.assignments[person]) menu.assignments[person] = {};
+    menu.assignments[person][key] = input.value.trim();
+  });
+
+  saveMenus();
+  renderMenusList();
+  
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:9999px;box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.2);z-index:99999;';
+  toast.innerHTML = `✅ Changes saved for "${menu.title}"!`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+
+function deleteMenu(menuId, buttonEl) {
+  if (!confirm("Throw this menu in the dumpster?")) return;
+  
+  menus = menus.filter(m => m.id !== menuId);
+  saveMenus();
+  
+  buttonEl.closest('.fixed').remove();
+  renderMenusList();
 }
 
 // ==================== OCR ====================
 async function startOCR() {
-  if (newRecipeImages.length === 0) { alert("Please add at least one image first!"); return; }
+  if (newRecipeImages.length === 0) {
+    alert("Please add at least one image first!");
+    return;
+  }
   const btn = document.getElementById('ocrBtn');
   const btnText = document.getElementById('ocrBtnText');
   btn.disabled = true;
   btnText.innerHTML = 'Processing... ⏳';
 
   try {
-    if (!ocrWorker) ocrWorker = await Tesseract.createWorker('eng', 1, { logger: m => console.log(m) });
+    if (!ocrWorker) {
+      ocrWorker = await Tesseract.createWorker('eng', 1, { logger: m => console.log(m) });
+    }
     let combinedText = "";
     for (let imageData of newRecipeImages) {
       const { data: { text } } = await ocrWorker.recognize(imageData);
@@ -652,7 +1019,7 @@ window.onload = function() {
   setupDropZone();
   document.getElementById('imageUpload').addEventListener('change', e => handleFiles(e.target.files));
   showHome();
-  console.log("✅ Family Recipe App fully updated");
+  console.log("✅ Family Recipe App - Summary format fixed to 'Mon, Jul 13   Breakfast    Pizza'");
 };
 </script>
 </body>
