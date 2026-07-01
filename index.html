@@ -312,6 +312,17 @@ function getDefaultImage() { return "https://picsum.photos/id/1080/800/600"; }
 function saveRecipes() { localStorage.setItem('keelyBrianRecipes', JSON.stringify(recipes)); }
 function saveMenus() { localStorage.setItem('keelyBrianMenus', JSON.stringify(menus)); }
 
+function formatMenuDate(dateStr) {
+  if (!dateStr) return '';
+  // Force local date to avoid timezone shifts
+  const d = new Date(dateStr + 'T00:00:00');
+  if (isNaN(d.getTime())) return dateStr;
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  return `${weekday}, ${month}-${day}`;
+}
+
 // ==================== IMAGE COMPRESSION ====================
 function compressImage(file, maxWidth = 1200, quality = 0.85) {
   return new Promise((resolve) => {
@@ -695,14 +706,14 @@ function openCamera() {
   input.click();
 }
 
-function handleFiles(files) {
+async function handleFiles(files) {
   if (!files) return;
-  Array.from(files).forEach(async file => {
-    if (!file.type.startsWith('image/')) return;
+  for (let file of Array.from(files)) {
+    if (!file.type.startsWith('image/')) continue;
     const compressed = await compressImage(file);
     newRecipeImages.push(compressed);
     renderPreviewImages();
-  });
+  }
 }
 
 function renderPreviewImages() {
@@ -836,14 +847,14 @@ function viewMenu(menuId) {
         <div class="flex items-center gap-4">
           <h2 class="text-3xl font-semibold">${menu.title}</h2>
           <button onclick="showMenuSummary(${menu.id}, this)" 
-                  class="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-sm font-semibold flex items-center gap-2">
+                  class="px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-semibold flex items-center gap-2">
             📋 View Full Summary
           </button>
         </div>
         <div class="flex gap-3">
-          <button onclick="saveMenuEdits(${menu.id}, this)" class="px-6 py-2 bg-green-600 text-white rounded-2xl font-semibold">Save Changes</button>
-          <button onclick="deleteMenu(${menu.id}, this)" class="px-6 py-2 bg-red-500 text-white rounded-2xl font-semibold">Delete Menu</button>
-          <button onclick="this.closest('.fixed').remove()" class="px-6 py-2 bg-gray-200 rounded-2xl font-semibold">Close</button>
+          <button onclick="saveMenuEdits(${menu.id}, this)" class="px-4 py-1.5 text-sm md:text-base md:px-6 md:py-2 bg-green-600 text-white rounded-2xl font-semibold">Save Changes</button>
+          <button onclick="deleteMenu(${menu.id}, this)" class="px-4 py-1.5 text-sm md:text-base md:px-6 md:py-2 bg-red-500 text-white rounded-2xl font-semibold">Delete Menu</button>
+          <button onclick="this.closest('.fixed').remove()" class="px-4 py-1.5 text-sm md:text-base md:px-6 md:py-2 bg-gray-200 rounded-2xl font-semibold">Close</button>
         </div>
       </div>
       
@@ -854,8 +865,9 @@ function viewMenu(menuId) {
               <th class="sticky left-0 bg-white z-10">Person</th>
   `;
 
+  // Header with dynamic column widths and fixed date format
   menu.days.forEach(day => {
-    const dateLabel = new Date(day.date).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+    const dateLabel = formatMenuDate(day.date);
     tableHTML += `<th colspan="${menu.mealTypes.length}">${dateLabel}</th>`;
   });
   tableHTML += `</tr><tr><th class="sticky left-0 bg-white z-10"></th>`;
@@ -869,6 +881,7 @@ function viewMenu(menuId) {
   });
   tableHTML += `</tr></thead><tbody>`;
 
+  // Body with highlighted filled inputs
   (menu.people || []).forEach(person => {
     tableHTML += `<tr><td class="font-semibold sticky left-0 bg-white z-10">${person}</td>`;
     
@@ -916,16 +929,11 @@ function showMenuSummary(menuId, buttonEl) {
     if (menu.assignments && menu.assignments[person]) {
       Object.keys(menu.assignments[person]).forEach(key => {
         const value = menu.assignments[person][key];
-        if (value && value.trim() !== '') {
-          const [dateStr, meal] = key.split('-');
-          const date = new Date(dateStr);
-          const dateLabel = date.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
-          });
-          summaryHTML += `<div class="flex justify-between bg-pink-50 px-4 py-2.5 rounded-xl text-sm">
-            <span class="font-medium">${dateLabel} &nbsp;&nbsp;&nbsp; <strong>${meal}</strong></span>
+        if (value) {
+          const [date, meal] = key.split('-');
+          const dateLabel = formatMenuDate(date);
+          summaryHTML += `<div class="flex justify-between bg-pink-50 px-4 py-2 rounded-xl">
+            <span class="font-medium">${dateLabel} – <strong>${meal}</strong></span>
             <span class="text-gray-700">${value}</span>
           </div>`;
         }
@@ -1019,7 +1027,7 @@ window.onload = function() {
   setupDropZone();
   document.getElementById('imageUpload').addEventListener('change', e => handleFiles(e.target.files));
   showHome();
-  console.log("✅ Family Recipe App - Summary format fixed to 'Mon, Jul 13   Breakfast    Pizza'");
+  console.log("✅ Family Recipe App updated - Full Summary dates + categories fixed, multiple images robust, mobile menu buttons improved");
 };
 </script>
 </body>
