@@ -314,7 +314,6 @@ function saveMenus() { localStorage.setItem('keelyBrianMenus', JSON.stringify(me
 
 function formatMenuDate(dateStr) {
   if (!dateStr) return '';
-  // Force local date to avoid timezone shifts
   const d = new Date(dateStr + 'T00:00:00');
   if (isNaN(d.getTime())) return dateStr;
   const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
@@ -819,8 +818,6 @@ function saveNewMenu() {
   menus.push(newMenu);
   saveMenus();
 
-  menus = JSON.parse(localStorage.getItem('keelyBrianMenus')) || [];
-
   closeMenuModal();
 
   const toast = document.createElement('div');
@@ -847,25 +844,33 @@ function viewMenu(menuId) {
         <div class="flex items-center gap-4">
           <h2 class="text-3xl font-semibold">${menu.title}</h2>
           <button onclick="showMenuSummary(${menu.id}, this)" 
-                  class="px-3 py-1.5 text-sm md:text-base md:px-4 md:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-semibold flex items-center gap-2">
+                  class="px-2 py-1 text-xs md:text-sm md:px-3 md:py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-semibold flex items-center gap-2">
             📋 View Full Summary
           </button>
         </div>
         <div class="flex gap-3">
-          <button onclick="saveMenuEdits(${menu.id}, this)" class="px-4 py-1.5 text-sm md:text-base md:px-6 md:py-2 bg-green-600 text-white rounded-2xl font-semibold">Save Changes</button>
-          <button onclick="deleteMenu(${menu.id}, this)" class="px-4 py-1.5 text-sm md:text-base md:px-6 md:py-2 bg-red-500 text-white rounded-2xl font-semibold">Delete Menu</button>
-          <button onclick="this.closest('.fixed').remove()" class="px-4 py-1.5 text-sm md:text-base md:px-6 md:py-2 bg-gray-200 rounded-2xl font-semibold">Close</button>
+          <button onclick="saveMenuEdits(${menu.id}, this)" class="px-3 py-1 text-xs md:text-sm md:px-4 md:py-1.5 bg-green-600 text-white rounded-2xl font-semibold">Save Changes</button>
+          <button onclick="deleteMenu(${menu.id}, this)" class="px-3 py-1 text-xs md:text-sm md:px-4 md:py-1.5 bg-red-500 text-white rounded-2xl font-semibold">Delete Menu</button>
+          <button onclick="this.closest('.fixed').remove()" class="px-3 py-1 text-xs md:text-sm md:px-4 md:py-1.5 bg-gray-200 rounded-2xl font-semibold">Close</button>
         </div>
+      </div>
+
+      <!-- ZOOM CONTROLS -->
+      <div class="flex justify-end items-center gap-2 mb-4">
+        <span class="text-sm text-gray-600">Table Zoom:</span>
+        <button onclick="adjustZoom(this.closest('.fixed'), -0.25)" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-xl text-lg font-bold">-</button>
+        <button onclick="adjustZoom(this.closest('.fixed'), 0.25)" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-xl text-lg font-bold">+</button>
+        <span class="text-xs text-gray-500 ml-2">(Pinch zoom also works on mobile)</span>
       </div>
       
       <div class="overflow-x-auto">
-        <table class="menu-table w-full border-collapse text-sm">
-          <thead>
-            <tr>
-              <th class="sticky left-0 bg-white z-10">Person</th>
+        <div class="zoomable-table-container" style="transform-origin: top left; display: inline-block;">
+          <table class="menu-table w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th class="sticky left-0 bg-white z-10">Person</th>
   `;
 
-  // Header with dynamic column widths and fixed date format
   menu.days.forEach(day => {
     const dateLabel = formatMenuDate(day.date);
     tableHTML += `<th colspan="${menu.mealTypes.length}">${dateLabel}</th>`;
@@ -881,7 +886,6 @@ function viewMenu(menuId) {
   });
   tableHTML += `</tr></thead><tbody>`;
 
-  // Body with highlighted filled inputs
   (menu.people || []).forEach(person => {
     tableHTML += `<tr><td class="font-semibold sticky left-0 bg-white z-10">${person}</td>`;
     
@@ -897,8 +901,8 @@ function viewMenu(menuId) {
     tableHTML += `</tr>`;
   });
 
-  tableHTML += `</tbody></table></div>
-    <p class="text-xs text-gray-500 mt-4">Tip: Click any box to expand it. Filled boxes are highlighted in pink.</p>
+  tableHTML += `</tbody></table></div></div>
+    <p class="text-xs text-gray-500 mt-4">Tip: Click any box to expand it. Filled boxes are highlighted in pink. Use + / − to zoom.</p>
   </div>`;
 
   container.innerHTML = tableHTML;
@@ -932,9 +936,10 @@ function showMenuSummary(menuId, buttonEl) {
         if (value) {
           const [date, meal] = key.split('-');
           const dateLabel = formatMenuDate(date);
-          summaryHTML += `<div class="flex justify-between bg-pink-50 px-4 py-2 rounded-xl">
-            <span class="font-medium">${dateLabel} – <strong>${meal}</strong></span>
-            <span class="text-gray-700">${value}</span>
+          summaryHTML += `<div class="flex gap-3 items-center bg-pink-50 px-4 py-2 rounded-xl">
+            <span class="font-medium w-24 flex-shrink-0">${dateLabel}</span>
+            <span class="font-semibold text-pink-700 w-28 flex-shrink-0">${meal}</span>
+            <span class="text-gray-700 flex-1">${value}</span>
           </div>`;
         }
       });
@@ -986,6 +991,18 @@ function deleteMenu(menuId, buttonEl) {
   renderMenusList();
 }
 
+// ==================== ZOOM FUNCTION FOR MENU TABLE ====================
+function adjustZoom(container, delta) {
+  if (!container) return;
+  const zoomCont = container.querySelector('.zoomable-table-container');
+  if (!zoomCont) return;
+
+  let currentScale = parseFloat(zoomCont.dataset.scale || '1');
+  currentScale = Math.max(0.4, Math.min(4, currentScale + delta));
+  zoomCont.style.transform = `scale(${currentScale})`;
+  zoomCont.dataset.scale = currentScale.toString();
+}
+
 // ==================== OCR ====================
 async function startOCR() {
   if (newRecipeImages.length === 0) {
@@ -1027,7 +1044,7 @@ window.onload = function() {
   setupDropZone();
   document.getElementById('imageUpload').addEventListener('change', e => handleFiles(e.target.files));
   showHome();
-  console.log("✅ Family Recipe App updated - Full Summary dates + categories fixed, multiple images robust, mobile menu buttons improved");
+  console.log("✅ Family Recipe App fully updated - Multiple images (new + edit), Full Summary with categories + correct dates, Mobile zoom + smaller buttons, Camera fully functional");
 };
 </script>
 </body>
