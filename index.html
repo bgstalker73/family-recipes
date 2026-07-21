@@ -314,6 +314,7 @@ function saveMenus() { localStorage.setItem('keelyBrianMenus', JSON.stringify(me
 
 function formatMenuDate(dateStr) {
   if (!dateStr) return '';
+  // Robust parsing with explicit time to avoid timezone shifts
   const d = new Date(dateStr + 'T00:00:00');
   if (isNaN(d.getTime())) return dateStr;
   const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
@@ -849,9 +850,9 @@ function viewMenu(menuId) {
           </button>
         </div>
         <div class="flex gap-3">
-          <button onclick="saveMenuEdits(${menu.id}, this)" class="px-3 py-1 text-xs md:text-sm md:px-4 md:py-1.5 bg-green-600 text-white rounded-2xl font-semibold">Save Changes</button>
-          <button onclick="deleteMenu(${menu.id}, this)" class="px-3 py-1 text-xs md:text-sm md:px-4 md:py-1.5 bg-red-500 text-white rounded-2xl font-semibold">Delete Menu</button>
-          <button onclick="this.closest('.fixed').remove()" class="px-3 py-1 text-xs md:text-sm md:px-4 md:py-1.5 bg-gray-200 rounded-2xl font-semibold">Close</button>
+          <button onclick="saveMenuEdits(${menu.id}, this)" class="px-2 py-1 text-xs md:text-sm md:px-3 md:py-1.5 bg-green-600 text-white rounded-2xl font-semibold">Save Changes</button>
+          <button onclick="deleteMenu(${menu.id}, this)" class="px-2 py-1 text-xs md:text-sm md:px-3 md:py-1.5 bg-red-500 text-white rounded-2xl font-semibold">Delete Menu</button>
+          <button onclick="this.closest('.fixed').remove()" class="px-2 py-1 text-xs md:text-sm md:px-3 md:py-1.5 bg-gray-200 rounded-2xl font-semibold">Close</button>
         </div>
       </div>
 
@@ -891,7 +892,7 @@ function viewMenu(menuId) {
     
     menu.days.forEach(day => {
       menu.mealTypes.forEach(meal => {
-        const key = `${day.date}-${meal}`;
+        const key = `${day.date}|${meal}`;   // ← FIXED: safe separator |
         const value = (menu.assignments && menu.assignments[person] && menu.assignments[person][key]) || '';
         const filledClass = value.trim() ? 'filled-input' : '';
         
@@ -902,7 +903,7 @@ function viewMenu(menuId) {
   });
 
   tableHTML += `</tbody></table></div></div>
-    <p class="text-xs text-gray-500 mt-4">Tip: Click any box to expand it. Filled boxes are highlighted in pink. Use + / − to zoom.</p>
+    <p class="text-xs text-gray-500 mt-4">Tip: Click any box to expand it. Filled boxes are highlighted in pink. Use + / − to zoom. Swipe back on mobile returns to previous screen.</p>
   </div>`;
 
   container.innerHTML = tableHTML;
@@ -934,7 +935,7 @@ function showMenuSummary(menuId, buttonEl) {
       Object.keys(menu.assignments[person]).forEach(key => {
         const value = menu.assignments[person][key];
         if (value) {
-          const [date, meal] = key.split('-');
+          const [date, meal] = key.split('|');   // ← FIXED: safe separator |
           const dateLabel = formatMenuDate(date);
           summaryHTML += `<div class="flex gap-3 items-center bg-pink-50 px-4 py-2 rounded-xl">
             <span class="font-medium w-24 flex-shrink-0">${dateLabel}</span>
@@ -1044,7 +1045,7 @@ window.onload = function() {
   setupDropZone();
   document.getElementById('imageUpload').addEventListener('change', e => handleFiles(e.target.files));
   showHome();
-  console.log("✅ Family Recipe App fully updated - Multiple images (new + edit), Full Summary with categories + correct dates, Mobile zoom + smaller buttons, Camera fully functional");
+  console.log("✅ Family Recipe App fully updated - Multiple images (new + edit) working, Full Summary with categories + correct dates, Mobile zoom + smaller buttons, Camera fully functional");
 };
 </script>
 </body>
